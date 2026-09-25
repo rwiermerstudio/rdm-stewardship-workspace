@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/rwiermerstudio/rdm-stewardship-workspace/blob/main/schemas/decision-docket.schema.json",
+  "title": "Illustrative decision docket input (no subject-level content)",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "product_version", "change_kind", "classification", "consent_status", "community_authority", "repository_status"],
+  "properties": {
+    "id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,64}$"},
+    "product_version": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,64}$"},
+    "change_kind": {"enum": ["correction", "transformation", "protocol", "deposit"]},
+    "classification": {"enum": ["open-candidate", "restricted", "unknown"]},
+    "consent_status": {"enum": ["confirmed", "limited", "unknown", "not-applicable"]},
+    "community_authority": {"enum": ["not-applicable", "reviewed", "required", "unknown"]},
+    "repository_status": {"enum": ["none", "candidate", "reviewed"]},
+    "input_versions": {"type": "array", "items": {"type": "string", "pattern": "^[A-Za-z0-9._-]{1,64}$"}, "uniqueItems": true, "maxItems": 100}
+  }
+}
