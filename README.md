@@ -1,6 +1,25 @@
 # Research Stewardship Workspace
 
-**Architecture and executable decision-guide prototype** for researchers documenting change and provenance, planning long-term preservation, interpreting institutional/disciplinary guidance, and handling sensitive or community-governed data. This is a greenfield design and demonstrator, **not** a production compliance, ethics, repository, or access-control service.
+**Fictional role-play and executable decision-guide prototype** for researchers documenting change and provenance, planning long-term preservation, interpreting institutional/disciplinary guidance, and handling sensitive or community-governed data. This is **not** a production compliance, ethics, repository, or access-control service.
+
+## Try the browser exercise
+
+[Open the Meridian Stewardship Studio](https://rwiermerstudio.github.io/rdm-stewardship-workspace/) or serve the `demo/` directory with `python3 -m http.server 8765 --directory demo` and visit `http://localhost:8765`. The static HTML/CSS/JavaScript has no account, backend, uploads, persistence or analytics; it resets on refresh. Internet access is optional (only the web fonts and external standards links use it).
+
+Start the oral-history story as **Researcher**: enter *invented* input/output version IDs, a change summary and a safe evidence pointer, never participant content. Switch to **Data steward**, **Privacy reviewer** and **Community-appointed reviewer** for distinct fictional decisions. A needs-info or rejection must go back to the researcher for a revised plan. Community metadata visibility is a separate question from data access; neither control publishes anything. The **Repository curator** may reject or issue a *simulated* receipt after all reviews; reset returns to the beginning. Sky calibration provides a shorter contrasting route; coastal species demonstrates a restricted raw source versus a proposed generalised derivative.
+
+**Simulation, not permission.** Switching roles is not authentication; fictional decisions do not grant rights, create files, check real checksums, mint metadata, reserve space or transfer custody. Text fields cannot reliably distinguish fictional from real material—do **not** enter actual names, private reviewer notes, coordinates, consent text or credentials. There is no export, including no public export of reviewer notes. Use a real institution's approved process for real research.
+
+```sh
+python3 -m pip install -r requirements-dev.txt
+python3 -m unittest discover -s tests -v
+npm ci
+npm test
+npx playwright install chromium
+npm run test:browser
+```
+
+See [role-play design and evaluation](docs/ROLEPLAY.md) for the state transitions, test evidence and remaining limits.
 
 The central object is a **decision docket** attached to a project and data-product version. A researcher records a change or intended reuse, sees the most appropriate documentation artifact and preservation next steps, and is referred to the right human authority when a rule, consent term, or community agreement is unclear. A living DMP is a *view* assembled from such reviewed records, never a competing source of truth.
 
@@ -48,7 +67,7 @@ One participating institution, two contrasting disciplines, a steward-reviewed g
 
 ## Status
 
-Architecture + runnable, deliberately narrow prototype. No institutional policies loaded, no live DMP/repository/identity connectors, no production deployment or legal certification. This project does not assert that one documentation format, retention period, repository or openness level is universally best.
+Static fictional role-play plus runnable, deliberately narrow Python prototype. No actual institutional policies loaded, no live DMP/repository/identity connectors, no production deployment or legal certification. This project does not assert that one documentation format, retention period, repository or openness level is universally best.
 
 ## License
 

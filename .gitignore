@@ -1,6 +1,5 @@
+node_modules/
+test-results/
+playwright-report/
 __pycache__/
 *.pyc
-.env
-*.sqlite3
-*.db
-.DS_Store

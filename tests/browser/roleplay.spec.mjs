@@ -1,0 +1,26 @@
+import {test,expect} from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
+const role=async(page,name)=>page.getByLabel('You are acting as').selectOption(name);
+const decide=async(page,name,decision,reason)=>{await role(page,name);await page.getByLabel('Your fictional determination').selectOption(decision);await page.getByLabel('Reason (no private notes)').fill(reason);await page.getByRole('button',{name:'Record determination'}).click();};
+const start=async page=>{await page.getByLabel('What changed?').fill('Invented transcript correction');await page.getByLabel('Safe evidence reference').fill('restricted-log-ref-1');await page.getByRole('button',{name:'Record fictional change'}).click();};
+test('role separation, returned question, scoped decisions and simulated receipt',async({page})=>{
+ await page.goto('/');await expect(page.getByText('SIMULATION, NOT PERMISSION.')).toBeVisible();
+ await start(page);await expect(page.getByRole('button',{name:'Record determination'})).toHaveCount(0);
+ await role(page,'curator');await expect(page.getByRole('button',{name:'Record simulated receipt'})).toHaveCount(0);
+ await decide(page,'steward','accept','Version references trace correction');
+ await decide(page,'privacy','needs-info','Intended use is too broad');
+ await role(page,'researcher');await expect(page.getByText('Intended use is too broad',{exact:true})).toBeVisible();
+ await page.getByLabel('Your revised plan (invented, no subject content)').fill('Only reviewed research use and private catalogue');await page.getByRole('button',{name:'Return revised plan'}).click();
+ await decide(page,'privacy','accept','Narrow research use is suitable for exercise');
+ await role(page,'community');await page.getByLabel('Your fictional determination').selectOption('accept');await page.getByLabel('Metadata visibility').selectOption('private');await page.getByLabel('Data access route').selectOption('mediated');await page.getByLabel('Reason (no private notes)').fill('Private discovery, request review separate');await page.getByRole('button',{name:'Record determination'}).click();
+ await role(page,'curator');await page.getByLabel('Simulated receipt').selectOption('reject');await page.getByLabel('Reason: manifest, fixity and rights check').fill('No invented fixity reference');await page.getByRole('button',{name:'Record simulated receipt'}).click();await expect(page.getByText('HANDOFF RETURNED')).toBeVisible();
+ await page.getByLabel('Simulated receipt').selectOption('accept');await page.getByLabel('Reason: manifest, fixity and rights check').fill('Invented manifest and fixity references checked');await page.getByRole('button',{name:'Record simulated receipt'}).click();await expect(page.locator('#status')).toHaveText('SIMULATED HANDOFF');
+ await role(page,'researcher');await expect(page.getByText(/SIM-\d+/)).toBeVisible();await page.getByRole('button',{name:'Reset this story'}).click();await expect(page.getByText('No events yet.')).toBeVisible();
+});
+test('contrasting route and accessibility',async({page},testInfo)=>{
+ await page.goto('/');await page.getByRole('button',{name:/Sky survey/}).click();await expect(page.getByRole('heading',{name:/Sky survey/})).toBeVisible();
+ await start(page);await role(page,'steward');await page.getByLabel('Your fictional determination').selectOption('reject');await page.getByLabel('Reason (no private notes)').fill('Pipeline reference missing');await page.getByRole('button',{name:'Record determination'}).click();await role(page,'curator');await expect(page.getByRole('button',{name:'Record simulated receipt'})).toHaveCount(0);
+ const violations=(await new AxeBuilder({page}).analyze()).violations;expect(violations.map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)}))).toEqual([]);
+ const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1);expect(overflow).toBe(false);
+ await page.screenshot({path:`test-results/${testInfo.project.name}-sky.png`,fullPage:true});
+});

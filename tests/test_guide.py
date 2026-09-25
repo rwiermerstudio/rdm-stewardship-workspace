@@ -2,6 +2,7 @@ import importlib.util
 import json
 import unittest
 from pathlib import Path
+from jsonschema import Draft202012Validator
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location("guide", ROOT / "prototype" / "guide.py")
@@ -64,6 +65,14 @@ class GuideTests(unittest.TestCase):
             d = self.fixture(name)
             self.assertTrue(set(schema["required"]).issubset(d))
             self.assertEqual(guide.validate(d), d)
+
+    def test_transformation_without_inputs_rejected_by_schema_and_runtime(self):
+        schema = json.loads((ROOT / "schemas" / "decision-docket.schema.json").read_text())
+        docket = self.fixture("restricted-derivative.json")
+        docket.pop("input_versions")
+        self.assertFalse(Draft202012Validator(schema).is_valid(docket))
+        with self.assertRaises(ValueError):
+            guide.validate(docket)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,7 @@
 # Architecture: evidence-led guidance, not automated permission
 
+**Implemented teaching slice:** [Static role-play design and evaluation](ROLEPLAY.md). The browser's in-memory fictional state machine does not implement the durable docket, ACLs, policy integration or repository adapters described below. Keep this conceptual architecture distinct from deployed behavior.
+
 ## Context and explicit assumptions
 
 This is a new product; there is no institutional policy catalogue, identity provider, approved repository, or agreement authority to integrate today. Target users are researchers at an initial European university pilot, data stewards, repository/preservation staff, privacy/ethics specialists and relevant community authorities. An institution or discipline must configure and validate its own guidance. The architecture should travel across jurisdictions, but the first pilot is not a universal regulatory engine.

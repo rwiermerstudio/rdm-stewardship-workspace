@@ -4,6 +4,8 @@
   "title": "Illustrative decision docket input (no subject-level content)",
   "type": "object",
   "additionalProperties": false,
+  "if": {"properties": {"change_kind": {"const": "transformation"}}, "required": ["change_kind"]},
+  "then": {"required": ["input_versions"], "properties": {"input_versions": {"minItems": 1}}},
   "required": ["id", "product_version", "change_kind", "classification", "consent_status", "community_authority", "repository_status"],
   "properties": {
     "id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,64}$"},

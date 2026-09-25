@@ -1,4 +1,6 @@
-# Architecture evaluation against fictional Meridian Institute
+# Architecture evaluation
+
+For the later static multi-role exercise and its tested/untested boundaries, see [role-play design and evaluation](ROLEPLAY.md). The results below refer to the earlier Python-only fictional Meridian catalogue and are not evidence of a real repository or permission process.
 
 **Method.** The synthetic six-project catalogue exercises the documented decision-docket/workspace architecture through the CLI prototype. `tests/test_institution.py` provides executable checks for scope, version selection, repository feasibility, high-risk referrals, unknown consent, authority separation, and a deliberately impossible repository fit. These are *simulated scenario tests*, not researcher interviews or a real compliance audit. The catalogue is fully fictional.
 

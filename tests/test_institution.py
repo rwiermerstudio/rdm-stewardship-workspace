@@ -126,6 +126,39 @@ class InstitutionTests(unittest.TestCase):
         r = catalog.evaluate(altered, "stellar-survey", as_of="2027-02-01")
         self.assertNotIn("MI-DOC", [p["id"] for p in r["matched_policies"]])
 
+    def test_expired_replacement_holds_instead_of_losing_document_rule(self):
+        prior = next(p for p in self.data["policies"] if p["id"] == "MI-DOC")
+        self.data["policies"].append({**prior, "version": "2027.1", "effective_from": "2027-01-01", "effective_until": "2027-02-01"})
+        result = catalog.evaluate(self.data, "stellar-survey", as_of="2027-03-01")
+        self.assertEqual(result["outcome"], "hold")
+        self.assertTrue(any("MI-DOC" in s for s in result["referrals"]))
+
+    def test_researcher_cannot_own_review(self):
+        next(p for p in self.data["policies"] if p["id"] == "HER-COMM")["owner"] = "researcher-04"
+        with self.assertRaises(ValueError):
+            catalog.validate_catalog(self.data)
+
+    def test_unknown_community_applicability_holds(self):
+        next(p for p in self.data["projects"] if p["id"] == "stellar-survey")["community_governed"] = None
+        result = catalog.evaluate(self.data, "stellar-survey")
+        self.assertEqual(result["outcome"], "hold")
+        self.assertIn("community", result["reviewer_ids"])
+
+    def test_repository_without_compatible_access_is_excluded(self):
+        repo = next(r for r in self.data["repositories"] if r["id"] == "meridian-community")
+        repo["access"] = ["open"]
+        result = catalog.evaluate(self.data, "oral-heritage")
+        self.assertEqual(result["repository_candidates"], [])
+        self.assertIn("access mode", next(x for x in result["repository_exclusions"] if x["id"] == repo["id"])["reasons"])
+
+    def test_schema_and_runtime_reject_missing_lineage(self):
+        schema = json.loads((ROOT / "schemas/fictional-institution.schema.json").read_text())
+        p = next(p for p in self.data["projects"] if p["id"] == "oral-heritage")
+        p["inputs"] = []
+        self.assertFalse(Draft202012Validator(schema).is_valid(self.data))
+        with self.assertRaises(ValueError):
+            catalog.validate_catalog(self.data)
+
     def test_ambiguous_policy_release_is_rejected(self):
         altered = json.loads(json.dumps(self.data))
         altered["policies"].append({**altered["policies"][0], "version": "other"})

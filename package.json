@@ -1,0 +1,1 @@
+{"private":true,"scripts":{"test":"node --test tests/roleplay.test.mjs","test:browser":"playwright test"},"devDependencies":{"@axe-core/playwright":"^4.10.2","@playwright/test":"^1.58.2"}}
