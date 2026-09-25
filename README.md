@@ -22,6 +22,7 @@ The central object is a **decision docket** attached to a project and data-produ
 - [Source register](docs/SOURCES.md): source-backed standards and applicability limits.
 - [Fictional Meridian Institute](docs/FICTIONAL-INSTITUTION.md): six research groups, role-based stewards/reviewers, four candidate repositories, ten invented policies and six diverse projects with a standards mapping.
 - [Architecture evaluation](docs/EVALUATION.md): observed scenario results, gaps found and prioritised next steps.
+- [Critical multi-role demo review](docs/CRITICAL-REVIEW.md): verified gaps, human-language criteria, proposed role-play and open product decisions.
 - [`examples/meridian-institute.json`](examples/meridian-institute.json) and its [JSON Schema](schemas/fictional-institution.schema.json): explicitly synthetic catalogue; no real people, policies or research records.
 - [`prototype/catalog.py`](prototype/catalog.py): validated, date-aware fictional policy and repository-fit evaluator with exclusion reasons and referrals. It never grants access or accepts a deposit.
 - [`schemas/decision-docket.schema.json`](schemas/decision-docket.schema.json): portable input contract for a decision, not a policy schema or real researcher record.
