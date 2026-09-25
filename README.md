@@ -20,15 +20,23 @@ The central object is a **decision docket** attached to a project and data-produ
 - [Decision record](docs/DECISIONS.md): two architectural candidates, synthesis and explicit trade-offs.
 - [Pilot and acceptance tests](docs/PILOT.md): phased delivery, example scenarios, measures, stakeholder review and non-goals.
 - [Source register](docs/SOURCES.md): source-backed standards and applicability limits.
+- [Fictional Meridian Institute](docs/FICTIONAL-INSTITUTION.md): six research groups, role-based stewards/reviewers, four candidate repositories, ten invented policies and six diverse projects with a standards mapping.
+- [Architecture evaluation](docs/EVALUATION.md): observed scenario results, gaps found and prioritised next steps.
+- [`examples/meridian-institute.json`](examples/meridian-institute.json) and its [JSON Schema](schemas/fictional-institution.schema.json): explicitly synthetic catalogue; no real people, policies or research records.
+- [`prototype/catalog.py`](prototype/catalog.py): validated, date-aware fictional policy and repository-fit evaluator with exclusion reasons and referrals. It never grants access or accepts a deposit.
 - [`schemas/decision-docket.schema.json`](schemas/decision-docket.schema.json): portable input contract for a decision, not a policy schema or real researcher record.
 - [`prototype/guide.py`](prototype/guide.py): dependency-free illustrative classifier. It **never grants access** and never interprets real institutional policy; fixtures are pedagogical examples only.
 
 ## Run the demonstrator
 
 ```sh
+python3 -m pip install -r requirements-dev.txt  # tests validate JSON Schema; CLI itself uses stdlib
 python3 -m unittest discover -s tests -v
 python3 prototype/guide.py examples/open-change.json
 python3 prototype/guide.py examples/restricted-derivative.json
+python3 prototype/catalog.py                       # all six fictional projects
+python3 prototype/catalog.py oral-heritage         # community review and custody
+python3 prototype/catalog.py neighbourhood-voices --as-of 2026-01-15
 ```
 
 The examples are entirely fictional. Do not enter real participant identifiers, raw content, credentials, consent records or community-restricted information in the demonstrator or GitHub issues. In particular, **GitHub is for source, design and synthetic tests, not research-data custody**.

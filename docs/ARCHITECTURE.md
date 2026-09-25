@@ -16,7 +16,7 @@ This is a new product; there is no institutional policy catalogue, identity prov
 
 ## Candidate shapes and chosen boundary
 
-See [DECISIONS.md](DECISIONS.md). A decision docket is the durable, auditable *unit of advice*; a researcher workspace groups dockets, data products, actions and plan assertions. This combines a short, purposeful question flow with durable institutional accountability. Begin as a **modular monolith**, not microservices.
+See [DECISIONS.md](DECISIONS.md) and the [six-project architecture evaluation](EVALUATION.md). A decision docket is the durable, auditable *unit of advice*; a researcher workspace groups dockets, data products, actions and plan assertions. This combines a short, purposeful question flow with durable institutional accountability. Begin as a **modular monolith**, not microservices. The fictional Meridian tests specifically exposed the need for hard repository-feasibility filters, independent community authority and date-aware policy release selection; these remain advisory until real providers and people verify them.
 
 ```text
 Researcher / steward / community reviewer

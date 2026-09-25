@@ -10,6 +10,8 @@ These sources inform a **design**, not a claim that the prototype implements or 
 - [UNESCO Recommendation on Open Science](https://www.unesco.org/en/legal-affairs/recommendation-open-science): supports inclusive approaches and the recognition of diverse knowledge systems; does not substitute for actual agreements.
 - [CoreTrustSeal requirements and certification](https://www.coretrustseal.org/): repository trustworthiness can inform handoff due diligence; certification is not a dataset-specific retention or access guarantee.
 - [EUR-Lex GDPR Regulation 2016/679](https://eur-lex.europa.eu/eli/reg/2016/679/oj/eng): where EU personal-data law applies, processing and research safeguards require contextual legal assessment. This project gives **no lawful-basis determination** and does not infer that pseudonymised data are freely shareable.
+- [DataCite Metadata Schema 4.7](https://schema.datacite.org/meta/kernel-4.7/), [RO-Crate](https://www.researchobject.org/ro-crate/specification), and [BagIt RFC 8493](https://www.rfc-editor.org/info/rfc8493/): candidate mappings for identifying/citing related research objects and packaging transfer manifests; the prototype generates none of these.
+- [FITS](https://fits.gsfc.nasa.gov/fits_standard.html), [DDI Lifecycle](https://ddialliance.org/ddi-lifecycle), [GA4GH Data Use Ontology](https://www.ga4gh.org/product/data-use-ontology-duo/), [Darwin Core](https://dwc.tdwg.org/), and [BIDS](https://bids-specification.readthedocs.io/en/stable/): discipline-specific targets used in the fictional evaluation. No format, controlled-vocabulary, consent or domain-schema conformance is asserted.
 
 ### Evidence and limits
 
