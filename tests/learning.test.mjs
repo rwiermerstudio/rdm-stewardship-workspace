@@ -66,3 +66,22 @@ test('reference input is only a prompt for invented identifiers, never a safety 
  let s=fresh();s=act(s,'choose',{choice:'ask'});s=act(s,'continue');
  for(const reference of ['', 'x','<img src=x onerror=alert(1)>','participant@example.com'])assert.throws(()=>act(s,'record',{reference}));
 });
+test('sound choices explain a distinct case consequence rather than a reusable generic message',()=>{
+ const consequences=Object.values(scenarios).map(c=>c.choices.find(o=>o.good).consequence);
+ assert.equal(new Set(consequences).size,consequences.length);
+ for(const text of consequences)assert.match(text,/still|must|cannot|remains|needs/i);
+});
+test('a reviewer cannot return a scope observation as though it named missing evidence',()=>{
+ const s=prepared('oral-heritage');
+ assert.throws(()=>act(s,'review',{role:'steward',decision:'return',reason:'steward-scope'}));
+});
+test('a returned question offers a tempting but inadequate response without reopening review',()=>{
+ let s=prepared('coastal-species');s=act(s,'review',{role:'steward',decision:'noted',reason:'steward-scope'});
+ s=act(s,'review',{role:'privacy',decision:'return',reason:'privacy-evidence'});
+ const options=scenarios[s.id].revisionChoices.privacy;
+ assert.equal(options.length,2);
+ const insufficient=options.find(o=>!o.sufficient);
+ assert.match(insufficient.label,/map|area|coars/i);
+ assert.throws(()=>act(s,'revise',{plan:insufficient.id,reference:'fictional-run-2'}),/outside|assessment|risk/i);
+ assert.equal(s.phase,'returned');
+});

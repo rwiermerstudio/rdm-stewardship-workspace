@@ -45,3 +45,29 @@ test('desktop and mobile keyboard focus, overflow and axe',async({page})=>{
  expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1)).toBe(false);
  expect((await new AxeBuilder({page}).analyze()).violations).toEqual([]);
 });
+test('options offer reasoning cues before a choice, not only after it',async({page})=>{
+ await page.goto('/');await page.locator('.project[data-id="oral-heritage"]').click();
+ await expect(page.locator('[data-choice="publish"]')).toContainText('A title might seem harmless.');
+ await expect(page.locator('[data-choice="ask"]')).toContainText('Description and file requests are separate questions.');
+});
+test('an inadequate returned-question correction explains the gap and leaves review blocked',async({page})=>{
+ await page.goto('/');await prepare(page,'coastal-species','assess');await review(page,'steward');
+ await role(page,'privacy');await page.getByLabel('What can you say from this draft?').selectOption('privacy-evidence');
+ await page.getByRole('button',{name:'Ask researcher for this missing check'}).click();await role(page,'researcher');
+ await page.getByLabel('New invented reference for the proposed correction').fill('fictional-run-2');
+ await page.getByLabel('What will you propose to change?').selectOption('shortcut-privacy');
+ await page.getByRole('button',{name:'Send proposed correction'}).click();
+ await expect(page.locator('#feedback')).toContainText('outside risk assessment');
+ await expect(page.locator('#step')).toContainText('A question came back');
+ await page.getByLabel('What will you propose to change?').selectOption('fix-privacy');
+ await page.getByRole('button',{name:'Send proposed correction'}).click();
+ await expect(page.locator('#step')).toContainText('Independent questions');
+});
+test('a reviewer can return only a missing-check statement',async({page})=>{
+ await page.goto('/');await prepare(page,'oral-heritage','ask');await role(page,'steward');
+ const response=page.getByLabel('What can you say from this draft?');
+ await response.selectOption('steward-scope');
+ await expect(page.getByRole('button',{name:'Ask researcher for this missing check'})).toBeDisabled();
+ await response.selectOption('steward-evidence');
+ await expect(page.getByRole('button',{name:'Ask researcher for this missing check'})).toBeEnabled();
+});

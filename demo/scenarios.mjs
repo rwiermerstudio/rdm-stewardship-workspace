@@ -46,10 +46,26 @@ const lessons={
  'variant-study':{card:'Genomics · Dr Elin Roe, researcher. Plans to reprocess sequences; decide whether secure storage authorizes reuse.',risk:['The draft begins reuse on the strength of vault capacity alone; consent and purpose are unknown. No processing occurred.','The draft proposes sharing genetic-difference results with collaborators while consent is unknown. Nothing was shared.'],steward:['The proposed caller run can be documented, but no reuse is authorized.','Need a run specification while work remains paused.'],privacy:['Consent and approved purpose are unknown; the project consent owner must decide reuse.','Need the consent owner to establish purpose and authority.'],external:'The project consent owner and privacy specialist must establish consent and approved purpose before reuse or release.'},
  'brain-maps':{card:'Neuroimaging · Dr Ria Chen, researcher. Removed facial structure from scans; decide whether the copies can move.',risk:['The draft treats automated face removal as complete inspection; residual image or companion fields may identify someone. Nothing moved.','The draft deletes companion information needed to interpret scans. Nothing was deleted.'],steward:['The proposed processing run and companion list are recorded; actual images and files remain uninspected.','Need the processing log and actual companion-file list.'],privacy:['A trained image reviewer and privacy office must inspect scans and companion fields; this exercise did not.','Need human inspection of actual images and companion fields.'],external:'A trained image reviewer must inspect actual scans; the privacy office must inspect companion fields and intended use before transfer.'}
 };
+const soundConsequences={
+ 'oral-heritage':'The draft keeps the title private and asks the appointed community body about discovery separately from recording requests. Actual consent terms still need privacy review.',
+ 'stellar-survey':'The draft connects the corrected images to a processing run and asks about storage capacity. Calibration inputs and real file integrity still need checking.',
+ 'neighbourhood-voices':'The draft keeps voices and coded rows private while the consent owner checks this proposed use. The coding guide still needs to travel with the restricted table.',
+ 'coastal-species':'The draft keeps both the map and description private and requests an outside location-risk assessment. Coarser map areas cannot clear the release hold on their own.',
+ 'variant-study':'The draft pauses reprocessing despite the candidate vault. The consent owner must establish whether this purpose is allowed before any reuse.',
+ 'brain-maps':'The draft requests a human check of images and companion fields. Residual identifiers and the processing run still need inspection before transfer.'
+};
+const inadequateCorrections={
+ 'oral-heritage':{steward:['Rename the transcript without finding its correction log','A new name cannot explain which recording and correction made this copy.'],privacy:['Hide the transcript but assume the catalogue title is covered','Closing files does not establish consent for the title or intended use.'],community:['Let the institute choose a generic public title','The institute cannot replace the appointed community body’s decision on discovery.']},
+ 'stellar-survey':{steward:['Rename the corrected images without linking the run','A new label cannot identify the processing run or calibration inputs.']},
+ 'neighbourhood-voices':{steward:['Rename the coded table without finding its coding guide','A new table name does not explain its codes or source interviews.'],privacy:['Remove names from the table and assume reuse is allowed','Removing direct names does not establish that this use is covered by consent.']},
+ 'coastal-species':{steward:['Rename the map without documenting the area method','A new name does not explain how the restricted sites became map areas.'],privacy:['Make the map areas larger and skip outside assessment','Coarsening alone cannot replace an outside risk assessment of map and description.']},
+ 'variant-study':{steward:['Move the files into the vault without a proposed run record','Secure storage does not document the proposed processing method.'],privacy:['Assume the vault permits this reuse','A vault does not establish consent or an approved purpose.']},
+ 'brain-maps':{steward:['Rename the scans without linking the processing run','A new name cannot show which run and companion files produced the scans.'],privacy:['Delete every companion field instead of arranging inspection','Removing fields blindly does not inspect images or establish intended use.']}
+};
 for(const [id,lesson] of Object.entries(lessons)){
  const c=scenarios[id];c.card=lesson.card;c.external=lesson.external;
  c.choices.filter(o=>!o.good).forEach((o,i)=>o.consequence=lesson.risk[i]);
- c.choices.find(o=>o.good).consequence='The draft keeps the proposed action private and routes the unresolved question to the named reviewers.';
+ c.choices.find(o=>o.good).consequence=soundConsequences[id];
  const corrections={
   'oral-heritage':{steward:'Ask for the correction log and link this transcript version to its recording',privacy:'Narrow the proposed use and ask for the actual consent terms',community:'Keep the title private and ask the appointed community body about discovery and requests'},
   'stellar-survey':{steward:'Link the actual processing run and calibration inputs to these image versions'},
@@ -59,6 +75,10 @@ for(const [id,lesson] of Object.entries(lessons)){
   'brain-maps':{steward:'Link the image-processing run and its companion-file list',privacy:'Request inspection of the actual images and companion fields'}
  };
  c.revisionPlans=Object.fromEntries(Object.entries(corrections[id]).map(([r,label])=>[r,{id:`fix-${r}`,label:`Proposed correction: ${label}`}]));
+ c.revisionChoices=Object.fromEntries(Object.entries(c.revisionPlans).map(([r,plan])=>[r,[
+  {id:plan.id,label:plan.label,sufficient:true},
+  {id:`shortcut-${r}`,label:inadequateCorrections[id][r][0],sufficient:false,feedback:inadequateCorrections[id][r][1]}
+ ]]));
  c.safePlans=[{id:'private-review',label:'Keep the proposed copy private and request the named checks'},...Object.values(c.revisionPlans)];
  c.packagePlans=[{id:'inventory-pending',label:'Draft inventory only; checks outstanding'}, {id:'inventory-revised',label:'Revised inventory includes run link and requests capacity and integrity checks'}];
  c.reviewOptions={};for(const r of c.reviewers){

@@ -28,7 +28,7 @@ export function transition(current,a){
   if(s.phase!=='review'||a.role!==nextRole(s))throw Error('This is not the next independent review');
   if(a.decision==='return'){
    const missing=c.reviewOptions[a.role].find(o=>o.id===a.reason);
-   if(!missing)throw Error('Choose the missing check before returning the question');
+   if(!missing||missing.id!==`${a.role}-evidence`)throw Error('Choose the missing check before returning the question');
    s.reviews[a.role]={decision:'return',reason:missing.id};s.phase='returned';
    note(roles[a.role],`Returned the question: ${missing.label}`);
   }
@@ -46,6 +46,8 @@ export function transition(current,a){
  }else if(a.type==='revise'){
   if(s.phase!=='returned')throw Error('Only returned questions can be revised');
   const returned=Object.keys(s.reviews).find(r=>s.reviews[r].decision==='return');
+  const chosen=c.revisionChoices[returned].find(o=>o.id===a.plan);
+  if(chosen&&!chosen.sufficient)throw Error(chosen.feedback);
   const plan=c.revisionPlans[returned];if(!plan||a.plan!==plan.id||s.plan===plan.id)throw Error('Choose the correction for this reviewer’s missing check');
   const reference=safeReference(a.reference,s.reference);
   delete s.reviews[returned];
