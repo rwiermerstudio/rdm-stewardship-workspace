@@ -46,6 +46,36 @@ const lessons={
  'variant-study':{card:'Genomics · Dr Elin Roe, researcher. Plans to reprocess sequences; decide whether secure storage authorizes reuse.',risk:['The draft begins reuse on the strength of vault capacity alone; consent and purpose are unknown. No processing occurred.','The draft proposes sharing genetic-difference results with collaborators while consent is unknown. Nothing was shared.'],steward:['The proposed caller run can be documented, but no reuse is authorized.','Need a run specification while work remains paused.'],privacy:['Consent and approved purpose are unknown; the project consent owner must decide reuse.','Need the consent owner to establish purpose and authority.'],external:'The project consent owner and privacy specialist must establish consent and approved purpose before reuse or release.'},
  'brain-maps':{card:'Neuroimaging · Dr Ria Chen, researcher. Removed facial structure from scans; decide whether the copies can move.',risk:['The draft treats automated face removal as complete inspection; residual image or companion fields may identify someone. Nothing moved.','The draft deletes companion information needed to interpret scans. Nothing was deleted.'],steward:['The proposed processing run and companion list are recorded; actual images and files remain uninspected.','Need the processing log and actual companion-file list.'],privacy:['A trained image reviewer and privacy office must inspect scans and companion fields; this exercise did not.','Need human inspection of actual images and companion fields.'],external:'A trained image reviewer must inspect actual scans; the privacy office must inspect companion fields and intended use before transfer.'}
 };
+// Each option states its appeal, price and remaining check before the learner commits.
+const tradeoffs={
+ 'oral-heritage':{
+  publish:['People could find the collection now.','The title may disclose a person or tradition.','Community authority and consent terms are unreviewed.'],
+  private:['No title becomes public today.','The institute would decide future discovery alone.','The appointed community body has not answered.'],
+  ask:['The title stays private while the right people answer.','Discovery takes longer and recording requests stay closed.','Consent and community decisions remain outside this exercise.']},
+ 'stellar-survey':{
+  copy:['A colleague receives images sooner.','The processing method is lost from the package.','The run, calibration inputs and capacity need checking.'],
+  run:['A colleague can trace the proposed correction.','Linking the run and arranging storage takes work.','Actual logs, integrity and archive capacity remain unchecked.'],
+  wait:['No unchecked image moves yet.','Waiting leaves the correction unexplained.','The processing run still needs linking.']},
+ 'neighbourhood-voices':{
+  post:['Colleagues can use the coded table sooner.','Coded rows may identify people or exceed consent.','The agreed use is not established.'],
+  delete:['Fewer files appear in the package.','Readers lose the meaning of the codes.','Consent and reidentification risk remain open.'],
+  scope:['The table and guide remain usable under review.','The proposed research use cannot proceed yet.','The consent owner must read actual agreements.']},
+ 'coastal-species':{
+  map:['A coarse map becomes available sooner.','Other clues may still reveal a rare site.','Independent assessment of map and caption is missing.'],
+  source:['A partner could check exact locations.','Sharing precise sites creates a larger exposure.','The partner route and location risk are unassessed.'],
+  assess:['Restricted sites and the coarse map stay private.','Publication waits for outside assessment.','The specialist has not inspected the map or caption.']},
+ 'variant-study':{
+  vault:['Protected storage could hold large files.','Storage does not authorize a new use.','Consent and approved purpose are unknown.'],
+  public:['Collaborators receive a smaller derived file.','Genetic differences can still be sensitive.','Consent and purpose remain unknown.'],
+  refer:['No unauthorized reuse starts today.','Reprocessing waits for a responsible decision.','The consent owner has not established the purpose.']},
+ 'brain-maps':{
+  done:['The processed scans can move sooner.','Residual faces or companion fields may identify people.','Human image and field inspection has not occurred.'],
+  sidecar:['Removing fields can reduce disclosure.','Deleting every field loses necessary context.','Actual scans and remaining fields need inspection.'],
+  check:['Both image and companion-file risks get reviewed.','The handoff waits for human inspection.','Actual images, fields and intended use remain unchecked.']}
+};
+for(const [id,options] of Object.entries(tradeoffs))for(const option of scenarios[id].choices){
+ const [gain,cost,unknown]=options[option.id];Object.assign(option,{gain,cost,unknown});
+}
 const soundConsequences={
  'oral-heritage':'The draft keeps the title private and asks the appointed community body about discovery separately from recording requests. Actual consent terms still need privacy review.',
  'stellar-survey':'The draft connects the corrected images to a processing run and asks about storage capacity. Calibration inputs and real file integrity still need checking.',

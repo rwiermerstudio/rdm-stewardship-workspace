@@ -1,0 +1,22 @@
+import {test,expect} from '@playwright/test';
+test('role and process remain visible, choice trade-offs precede action and generated evidence tracks a return',async({page})=>{
+ await page.goto('/');await page.locator('.project[data-id="stellar-survey"]').click();
+ await expect(page.locator('#process-view')).toContainText('Data steward');
+ await expect(page.locator('#process-view')).toContainText('Repository curator');
+ await expect(page.locator('[data-choice="run"]')).toContainText('Gain:');
+ await expect(page.locator('[data-choice="run"]')).toContainText('Cost:');
+ await expect(page.locator('[data-choice="run"]')).toContainText('Still unknown:');
+ await page.locator('[data-choice="run"]').click();await page.getByRole('button',{name:'Continue to the change record'}).click();
+ await expect(page.getByLabel('Invented method or evidence reference')).toHaveCount(0);
+ await page.getByRole('button',{name:'Make draft and ask reviewers'}).click();
+ await expect(page.locator('#evidence')).toContainText('EV-STELLAR-SURVEY-001');
+ await page.getByLabel('Acting as').selectOption('steward');
+ await page.getByLabel('What can you say from this draft?').selectOption('steward-evidence');
+ await page.getByRole('button',{name:'Ask researcher for this missing check'}).click();
+ await expect(page.locator('#open-items')).toContainText('Q-STELLAR-SURVEY-001');
+ await page.getByLabel('Acting as').selectOption('researcher');
+ await page.getByLabel('What will you propose to change?').selectOption('fix-steward');
+ await page.getByRole('button',{name:'Send proposed correction'}).click();
+ await expect(page.locator('#fixed-items')).toContainText('EV-STELLAR-SURVEY-002');
+ await expect(page.locator('#open-items')).toContainText('capacity');
+});
