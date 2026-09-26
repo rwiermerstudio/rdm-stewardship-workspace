@@ -78,7 +78,7 @@ for(const [id,options] of Object.entries(tradeoffs))for(const option of scenario
 }
 const soundConsequences={
  'oral-heritage':'The draft keeps the title private and asks the appointed community body about discovery separately from recording requests. Actual consent terms still need privacy review.',
- 'stellar-survey':'The draft connects the corrected images to a processing run and asks about storage capacity. Calibration inputs and real file integrity still need checking.',
+ 'stellar-survey':'The draft proposes linking the corrected images to a processing run and asks about storage capacity. No run log or calibration inputs were supplied or checked here; real file integrity still needs checking.',
  'neighbourhood-voices':'The draft keeps voices and coded rows private while the consent owner checks this proposed use. The coding guide still needs to travel with the restricted table.',
  'coastal-species':'The draft keeps both the map and description private and requests an outside location-risk assessment. Coarser map areas cannot clear the release hold on their own.',
  'variant-study':'The draft pauses reprocessing despite the candidate vault. The consent owner must establish whether this purpose is allowed before any reuse.',

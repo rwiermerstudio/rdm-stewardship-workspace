@@ -13,10 +13,10 @@ function addEvidence(s,kind,description){
 function noSubjectInput(a){if(Object.hasOwn(a,'reference'))throw Error('Evidence IDs are generated here; do not enter subject content');}
 export function processView(s){
  const c=scenarios[s.id],next=nextRole(s),active=['choice','feedback','record','returned','repair'].includes(s.phase)?'researcher':s.phase==='curator'?'curator':next;
- const status=r=>r==='curator'&&s.id!=='stellar-survey'?'not in this practice route':r===active?'next':r==='curator'&&s.phase==='repair'||s.reviews[r]?.decision==='return'?'returned':s.reviews[r]?'recorded':r==='researcher'&&s.reference?'drafted':r==='curator'&&s.receipt?.decision==='noted'?'recorded':'waiting';
+ const status=r=>r==='curator'&&s.id!=='stellar-survey'?'not in this practice route':r===active?'next':r==='curator'&&s.phase==='repair'||s.reviews[r]?.decision==='return'?'returned':s.reviews[r]&&s.issues.some(x=>x.role===r&&x.status==='open')?'open question':s.reviews[r]?'recorded':r==='researcher'&&s.reference?'drafted':r==='curator'&&s.receipt?.decision==='noted'?'recorded':'waiting';
  const roleIds=['researcher',...c.reviewers,'curator'];
  const rolesView=roleIds.map(r=>({role:r,name:roles[r],status:status(r),question:r==='researcher'?c.question:r==='curator'?'Check proposed package, capacity and integrity.':c.reviewQuestions[r]}));
- return {roles:rolesView,steps:[{name:'Choose a response',status:s.choice?'drafted':'next'},{name:'Record proposed method',status:s.reference?'drafted':'waiting'},{name:'Independent questions',status:s.phase==='returned'?'returned':c.reviewers.every(r=>s.reviews[r]&&s.reviews[r].decision!=='return')?'recorded':s.phase==='review'?'next':'waiting'},{name:'Repository question',status:s.id!=='stellar-survey'?'not in this practice route':s.phase==='repair'?'returned':s.receipt?.decision==='noted'?'recorded':s.phase==='curator'?'next':'waiting'}],open:[...s.issues.filter(x=>x.status==='open').map(x=>`${x.id}: ${x.question}`),c.external,...(c.hold?[c.hold]:[])],fixed:s.issues.filter(x=>x.status==='fixed in draft').map(x=>`${x.id}: ${x.resolution} (${x.evidence}; proposed only)`)};
+ return {roles:rolesView,steps:[{name:'Choose a response',status:s.choice?'drafted':'next'},{name:'Record proposed method',status:s.reference?'drafted':'waiting'},{name:'Independent questions',status:s.phase==='returned'?'returned':c.reviewers.every(r=>s.reviews[r]&&s.reviews[r].decision!=='return')?(s.issues.some(x=>x.status==='open'&&c.reviewers.includes(x.role))?'open questions':'recorded'):s.phase==='review'?'next':'waiting'},{name:'Repository question',status:s.id!=='stellar-survey'?'not in this practice route':s.phase==='repair'?'returned':s.receipt?.decision==='noted'?'recorded':s.phase==='curator'?'next':'waiting'}],open:[...s.issues.filter(x=>x.status==='open').map(x=>`${x.id}: ${x.question}`),c.external,...(c.hold?[c.hold]:[])],fixed:s.issues.filter(x=>x.status==='fixed in draft').map(x=>`${x.id}: ${x.resolution} (${x.evidence}; proposed only)`)};
 }
 export function transition(current,a){
  const s=structuredClone(current),c=scenarios[s.id];
@@ -51,6 +51,9 @@ export function transition(current,a){
     s.communityScope={metadata:a.metadata,access:a.access};
    }
    s.reviews[a.role]={decision:a.decision,reason:a.reason};note(roles[a.role],option.label);
+   if(a.decision==='needs-more'&&!s.issues.some(x=>x.role===a.role&&x.question===option.label&&x.status==='open')){
+    s.issues.push({id:`Q-${s.id.toUpperCase()}-${String(s.issues.length+1).padStart(3,'0')}`,role:a.role,question:option.label,status:'open',resolution:'',evidence:null});
+   }
    s.lastOutcome=option.label;
    if(!nextRole(s))s.phase=c.hold?'hold':s.id==='stellar-survey'?'curator':'pending';
   }
@@ -85,7 +88,23 @@ export function draft(s){
  const c=scenarios[s.id],choice=c.choices.find(o=>o.id===s.choice);
  const plan=c.safePlans.find(p=>p.id===s.plan).label,packagePlan=c.packagePlans.find(p=>p.id===s.packagePlan).label;
  const reviews=Object.entries(s.reviews).map(([r,v])=>`${roles[r]}: ${v.decision==='return'?`asked for ${c.reviewOptions[r].find(o=>o.id===v.reason)?.label}`:c.reviewOptions[r].find(o=>o.id===v.reason)?.label}`).join('\n')||'No reviewer response yet.';
- const corrections=s.issues.filter(x=>x.status==='fixed in draft'&&x.role!=='curator').map(x=>`${x.evidence}: ${x.resolution} (proposed only)`).join('\n');
- return {record:`Invented catalogue: ${c.from} → ${c.to}.\nProposed action: ${choice?.label||'Choose an action first'}.\n${choice?.consequence||'No draft action yet.'}\n${choice?.good?`Private plan: ${plan}.`:choice?'Draft action not approved; choose another action to replace this proposal.':'No plan yet.'}\nGenerated evidence pointer (unverified draft, not a file link): ${s.reference||'Not generated'}.\n${corrections?`Proposed corrections (actual evidence not inspected):\n${corrections}\n`:''}Training responses (not actual inspection or consent):\n${reviews}${s.communityScope?`\nDescription: ${s.communityScope.metadata}; file requests: ${s.communityScope.access}.`:''}`,
- handoff:`Candidate storage only: ${c.candidate}.\n${packagePlan}.\n${c.checklist}\nGenerated evidence pointer (unverified): ${s.reference||'Not generated'}.\nStill needs external checks: ${c.external}${c.hold?`\nHard hold: ${c.hold}`:''}`};
+ const corrections=s.issues.filter(x=>x.status==='fixed in draft').map(x=>`${x.evidence}: ${x.resolution} (proposed only)`).join('\n');
+ const open=processView(s).open.join('\n');
+ const method=s.evidence.find(x=>x.kind==='proposed method link');
+ const pointers=s.evidence.map(x=>`${x.id}: ${x.kind} — ${x.description} (generated here, unverified)`).join('\n')||'Not generated yet.';
+ const sections=[
+  {label:'Fixed in this exercise · not verified externally',text:`Project: ${c.from}. Selected path: ${choice?.label||'none yet'}. No real files, consent or processing log were inspected.`},
+  {label:'Still open · human decision or actual evidence',text:open},
+  {label:'Versions',text:`${c.from} → ${c.to} (invented catalogue labels)`},
+  {label:'Proposed action',text:`${choice?.label||'Choose an action first'}. ${choice?.consequence||'No draft action yet.'}`},
+  {label:'Benefit and compromise',text:choice?`Gain: ${choice.gain} Cost: ${choice.cost}`:'No choice yet.'},
+  {label:'Private plan · proposed',text:choice?.good?plan:'No agreed private plan in this draft.'},
+  {label:'Method pointer · generated, not verified',text:method?`${method.id}: ${method.description}`:'Not generated yet.'},
+  {label:'Corrections proposed in draft',text:corrections||'No draft corrections yet.'},
+  {label:'All generated pointers · none checked',text:pointers},
+  {label:'Training responses · not approval',text:reviews},
+  ...(s.communityScope?[{label:'Description versus file requests',text:`Description: ${s.communityScope.metadata}; file requests: ${s.communityScope.access}. Both need separate real decisions.`}]:[])
+ ];
+ return {sections,record:sections.map(x=>`${x.label}: ${x.text}`).join('\n')+`\nAll generated pointers:\n${pointers}`,
+ handoff:`Candidate storage only: ${c.candidate}.\n${packagePlan}.\n${c.checklist}\nMethod pointer: ${method?.id||'Not generated'}.\nOther generated pointers:\n${pointers}\nStill needs external checks: ${open}`};
 }

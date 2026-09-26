@@ -6,6 +6,8 @@ const button=(parent,label,handler,css='')=>{const el=document.createElement('bu
 const paragraph=(parent,text)=>{const el=document.createElement('p');el.textContent=text;parent.append(el);};
 const action=a=>{try{state=transition(state,a);render();$('step').focus();}catch(error){set('feedback',error.message);}};
 const list=(id,items)=>{const root=$(id);root.replaceChildren();for(const text of items){const li=document.createElement('li');li.textContent=text;root.append(li);}};
+const renderRecord=sections=>{const root=$('record');root.replaceChildren();for(const item of sections){const term=document.createElement('dt'),description=document.createElement('dd');term.textContent=item.label;description.textContent=item.text;root.append(term,description);}};
+const renderRoles=items=>{const root=$('role-lanes');root.replaceChildren();for(const item of items){const li=document.createElement('li'),name=document.createElement('strong'),status=document.createElement('span'),details=document.createElement('details'),summary=document.createElement('summary'),question=document.createElement('p');name.textContent=item.name;status.textContent=item.status;status.className='role-status';summary.textContent='Question';question.textContent=item.question;details.append(summary,question);li.append(name,status,details);root.append(li);}};
 const select=(parent,id,label,options,placeholder)=>{const lab=document.createElement('label');lab.htmlFor=id;lab.textContent=label;parent.append(lab);const control=document.createElement('select');control.id=id;control.append(new Option(placeholder,''));for(const o of options)control.append(new Option(o.label,o.id));parent.append(control);return control;};
 const gated=(parent,label,controls,handler)=>{const b=button(parent,label,handler,'primary');b.disabled=true;const update=()=>b.disabled=controls.some(x=>!x.value);controls.forEach(x=>x.addEventListener('input',update));return b;};
 for(const [id,c] of Object.entries(scenarios)){const b=button($('projects'),`${c.title}\n${c.card}`,()=>{state=fresh(id);role='researcher';$('role').value=role;render();$('project-title').focus();},'project');b.dataset.id=id;}
@@ -20,10 +22,10 @@ function render(){
  $('versions').hidden=['choice','feedback'].includes(state.phase);set('versions',`Earlier copy: ${c.from}. Proposed copy: ${c.to}. Invented labels, not files in this page.`);
  set('project-question',c.question);set('feedback',state.phase==='feedback'?state.feedback:state.lastOutcome||'');set('result','');
  $('support').hidden=state.phase==='choice';$('package-details').hidden=['choice','feedback','record'].includes(state.phase);$('handover').hidden=['choice','feedback','record'].includes(state.phase);$('history-section').hidden=!state.events.length;
- set('supplied',state.choice?`Researcher selected: ${c.choices.find(x=>x.id===state.choice).label}. No subject content was entered.`:'No decision yet. No subject content is requested.');set('record',d.record);set('handoff',d.handoff);
+ set('supplied',state.choice?`Researcher selected: ${c.choices.find(x=>x.id===state.choice).label}. No subject content was entered.`:'No decision yet. No subject content is requested.');renderRecord(d.sections);set('handoff',d.handoff);
  const view=processView(state);
  list('process-steps',view.steps.map(x=>`${x.name} · ${x.status}`));
- list('role-lanes',view.roles.map(x=>`${x.name} · ${x.status}. ${x.question}`));
+ renderRoles(view.roles);
  list('open-items',view.open);list('fixed-items',view.fixed.length?view.fixed:['No draft corrections yet.']);
  list('evidence',state.evidence.length?state.evidence.map(x=>`${x.id} · ${x.kind}. ${x.description}. Generated here; unverified, not a link to an inspected file.`):['No evidence pointer generated yet.']);
  const terms={

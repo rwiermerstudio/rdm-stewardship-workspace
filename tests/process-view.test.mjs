@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as model from '../demo/model.mjs';
-const {fresh,transition,scenarios}=model;
+const {fresh,transition,scenarios,draft}=model;
 const processView=(state)=>model.processView(state);
 const send=(s,type,rest={})=>transition(s,{type,...rest});
 const prepared=id=>{let s=fresh(id);s=send(s,'choose',{choice:scenarios[id].choices.find(x=>x.good).id});s=send(s,'continue');return send(s,'record');};
@@ -11,6 +11,23 @@ test('every decision names its gain, cost and unresolved check before selection'
   assert.ok(option.cost?.length>12,`${c.id}/${option.id} cost`);
   assert.ok(option.unknown?.length>12,`${c.id}/${option.id} unknown`);
  }
+});
+test('a recorded missing-evidence response remains an open named question',()=>{
+ let s=fresh('stellar-survey');s=transition(s,{type:'choose',choice:'run'});s=transition(s,{type:'continue'});s=transition(s,{type:'record'});
+ s=transition(s,{type:'review',role:'steward',decision:'needs-more',reason:'steward-evidence'});
+ assert.equal(s.phase,'curator');assert.ok(processView(s).open.some(x=>x.includes('calibration inputs')));
+ assert.match(draft(s).record,/calibration inputs/);
+ assert.notEqual(processView(s).steps.find(x=>x.name==='Independent questions').status,'recorded');
+});
+test('record preserves method pointer and all corrections, not only newest',()=>{
+ let s=fresh('oral-heritage');s=transition(s,{type:'choose',choice:'ask'});s=transition(s,{type:'continue'});s=transition(s,{type:'record'});
+ for(const r of ['steward','privacy']){
+  s=transition(s,{type:'review',role:r,decision:'return',reason:`${r}-evidence`});
+  s=transition(s,{type:'revise',plan:`fix-${r}`});
+  s=transition(s,{type:'review',role:r,decision:r==='steward'?'noted':'needs-more',reason:`${r}-scope`});
+ }
+ for(const id of ['EV-ORAL-HERITAGE-001','EV-ORAL-HERITAGE-002','EV-ORAL-HERITAGE-003'])assert.match(draft(s).record,new RegExp(id));
+ assert.match(draft(s).handoff,/EV-ORAL-HERITAGE-001/);
 });
 test('record creates an automatic invented evidence identifier without subject input',()=>{
  const s=prepared('stellar-survey');
