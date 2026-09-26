@@ -47,6 +47,22 @@ test('role briefing changes with selected reviewer and preserves the scenario',a
  await expect(page.locator('#moment')).not.toContainText('You are the researcher');
  await expect(page.locator('#purpose')).toContainText('Living Heritage Collective');
 });
+test('samples show safe, distinct data shapes without subject rows',async({page})=>{
+ await page.goto('/');
+ const examples={
+  'Oral histories':'transcript_id,language,consent_status',
+  'Sky survey':'SIMPLE',
+  'Coastal species':'grid_cell',
+  'Neighbourhood voices':'codebook_version',
+  'Variant study':'##fileformat=VCF',
+  'Brain maps':'DefacingRun'
+ };
+ for(const [story,shape] of Object.entries(examples)){
+  await page.getByRole('button',{name:new RegExp(story)}).click();
+  await expect(page.locator('#sample')).toContainText(shape);
+  await expect(page.locator('#sample')).toContainText('Synthetic structure');
+ }
+});
 test('external consent hold does not offer a curator acceptance',async({page})=>{
  await page.goto('/');await page.getByRole('button',{name:/Variant study/}).click();
  await page.getByLabel('What changed?').fill('Invented variant-caller update');

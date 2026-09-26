@@ -1,4 +1,5 @@
 import {fresh,transition,view,scenarios,roles,draft} from './model.mjs';
+import {sampleShapes} from './scenarios.mjs';
 let state=fresh('oral-heritage'), role='researcher';
 const $=id=>document.getElementById(id);
 const text=(id,value)=>$(id).textContent=value;
@@ -14,7 +15,8 @@ function form(markup,button,handler){$('form-area').innerHTML=`<form id="desk-fo
 function render(){const cfg=scenarios[state.scenario],v=view(state,role),pending=state.required.filter(r=>state.decisions[r]?.decision!=='accept');
  for(const b of document.querySelectorAll('.story')){b.classList.toggle('selected',b.dataset.story===state.scenario);b.setAttribute('aria-current',b.dataset.story===state.scenario?'true':'false');}
  text('scenario-number',String(storyKeys.indexOf(state.scenario)+1).padStart(2,'0'));text('story-title',cfg.title);text('story-subtitle',cfg.subtitle);text('role-badge',roles[role]);text('question',cfg.question);
- for(const key of ['purpose','assets','sample','known','unknown','options','outcome']) text(key,cfg[key]);
+ for(const key of ['purpose','assets','known','unknown','options','outcome']) text(key,cfg[key]);
+ text('sample',`${cfg.sample}\n\nSynthetic structure (illustrative, not imported):\n${sampleShapes[cfg.catalogueId]}`);
  text('moment',role==='researcher'?cfg.moment:role==='curator'?`You are the repository curator. ${cfg.hardHold?`This case has an external hold: ${cfg.hold} Do not accept a handoff here.`:'Check the proposed package only after its scoped reviews; this is not an actual deposit.'}`:`You are the ${roles[role].toLowerCase()}. ${cfg.review[role]||'This scenario does not assign you a review. Return to the researcher or another assigned role.'}`);
  const generated=draft(state);text('change-draft',generated.record);text('handoff-draft',generated.handoff);
  text('status',!state.description?'NOT STARTED':state.receipt?.decision==='accept'?'SIMULATED HANDOFF':state.receipt?.decision==='reject'?'HANDOFF RETURNED':pending.length?'REVIEW IN PROGRESS':cfg.hardHold?'EXTERNAL HOLD':'AWAITING CURATOR');

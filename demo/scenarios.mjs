@@ -9,3 +9,12 @@ export const scenarios={
 };
 // Short aliases preserve links to earlier exercises; selectors present the six catalogue projects.
 scenarios.oral=scenarios['oral-heritage'];scenarios.sky=scenarios['stellar-survey'];scenarios.coastal=scenarios['coastal-species'];
+// Fabricated field/header sketches convey shape without sample participants, sites or variants.
+export const sampleShapes={
+ 'oral-heritage':'transcript_id,language,consent_status\nEXAMPLE-ONLY,[withheld],[review required] — no words or identifiers',
+ 'stellar-survey':'FITS header sketch: SIMPLE = T; BITPIX = -32; NAXIS = 2\nPixel arrays omitted; processing run ref unverified',
+ 'coastal-species':'species_code,grid_cell,observation_month\n[withheld],[withheld],[withheld] — no coordinates or locations',
+ 'neighbourhood-voices':'recording_id,codebook_version,consent_scope\nEXAMPLE-ONLY,protocol-v2,[review required] — no quotations',
+ 'variant-study':'##fileformat=VCFv4.3\n#CHROM POS ID REF ALT — header only; no variants or genotypes',
+ 'brain-maps':'BIDS-like JSON sketch: {"Modality":"MR","DefacingRun":"unverified"}\nNo participant labels, image voxels or sidecar values'
+};
