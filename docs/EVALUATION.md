@@ -1,5 +1,11 @@
 # Architecture evaluation
 
+## Expanded browser evaluation
+
+All six catalogue IDs now have a briefing and safe invented manifest in `demo/scenarios.mjs`. The model assembles a plain-text record and handoff checklist from catalogue facts, typed safe pointers, and simulated reviewer reasons; there is no download, persistence or validation of those pointers. Test-first changes added Node checks for six differentiated routes, provenance attribution and hard holds, plus Playwright desktop/mobile checks of briefing, drafts, transitions, overflow and axe-core at a submitted sky state. The oral path exercises returned privacy review, separate community metadata/access, curator rejection and simulated acceptance. Sky has one steward question; variant unknown consent and coastal location risk block simulated acceptance even after review clicks. Neighbourhood and MRI have different prompts/checklists but do not have an individually exercised full browser handoff test. Scenario copy and small samples are seeded illustrations; the catalogue is the source for IDs, size, formats, versions, classification and consent status.
+
+This reduces repetitive version and handoff writing in an exercise, not measured researcher workload. No task-duration study or user comprehension test exists. A real pilot must verify consent, community authority, location risk, defacing, file fixity and repository capability outside this browser. The current text inputs cannot prevent real sensitive content; use only invented references.
+
 For the later static multi-role exercise and its tested/untested boundaries, see [role-play design and evaluation](ROLEPLAY.md). The results below refer to the earlier Python-only fictional Meridian catalogue and are not evidence of a real repository or permission process.
 
 **Method.** The synthetic six-project catalogue exercises the documented decision-docket/workspace architecture through the CLI prototype. `tests/test_institution.py` provides executable checks for scope, version selection, repository feasibility, high-risk referrals, unknown consent, authority separation, and a deliberately impossible repository fit. These are *simulated scenario tests*, not researcher interviews or a real compliance audit. The catalogue is fully fictional.

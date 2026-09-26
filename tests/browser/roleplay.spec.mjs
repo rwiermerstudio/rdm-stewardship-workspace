@@ -15,7 +15,22 @@ test('role separation, returned question, scoped decisions and simulated receipt
  await role(page,'community');await page.getByLabel('Your fictional determination').selectOption('accept');await page.getByLabel('Metadata visibility').selectOption('private');await page.getByLabel('Data access route').selectOption('mediated');await page.getByLabel('Reason (no private notes)').fill('Private discovery, request review separate');await page.getByRole('button',{name:'Record determination'}).click();
  await role(page,'curator');await page.getByLabel('Simulated receipt').selectOption('reject');await page.getByLabel('Reason: manifest, fixity and rights check').fill('No invented fixity reference');await page.getByRole('button',{name:'Record simulated receipt'}).click();await expect(page.getByText('HANDOFF RETURNED')).toBeVisible();
  await page.getByLabel('Simulated receipt').selectOption('accept');await page.getByLabel('Reason: manifest, fixity and rights check').fill('Invented manifest and fixity references checked');await page.getByRole('button',{name:'Record simulated receipt'}).click();await expect(page.locator('#status')).toHaveText('SIMULATED HANDOFF');
- await role(page,'researcher');await expect(page.getByText(/SIM-\d+/)).toBeVisible();await page.getByRole('button',{name:'Reset this story'}).click();await expect(page.getByText('No events yet.')).toBeVisible();
+ await role(page,'researcher');await expect(page.locator('#context').getByText(/SIM-\d+/)).toBeVisible();await page.getByRole('button',{name:'Reset this story'}).click();await expect(page.getByText('No events yet.')).toBeVisible();
+});
+test('scenario brief and generated drafts stay visible on desktop and mobile',async({page})=>{
+ await page.goto('/');
+ await expect(page.getByRole('heading',{name:'What you are doing'})).toBeVisible();
+ await expect(page.locator('#sample')).toContainText('Synthetic');
+ await page.getByRole('button',{name:/Variant study/}).click();
+ await expect(page.locator('#unknown')).toContainText('consent');
+ await expect(page.locator('#handoff-draft')).toContainText('hold');
+ await page.getByRole('button',{name:/Sky survey/}).click();
+ await start(page);
+ await expect(page.locator('#change-draft')).toContainText('Researcher');
+ await expect(page.locator('#handoff-draft')).toContainText('checksum');
+ const violations=(await new AxeBuilder({page}).analyze()).violations;
+ expect(violations.map(v=>({id:v.id,targets:v.nodes.map(n=>n.target)}))).toEqual([]);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1)).toBe(false);
 });
 test('contrasting route and accessibility',async({page},testInfo)=>{
  await page.goto('/');await page.getByRole('button',{name:/Sky survey/}).click();await expect(page.getByRole('heading',{name:/Sky survey/})).toBeVisible();

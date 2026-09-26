@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {fresh, transition, view} from '../demo/model.mjs';
+import {fresh, transition, view, scenarios, draft} from '../demo/model.mjs';
 const send = (s, role, type, payload={}) => transition(s,{role,type,...payload});
 const described = () => send(fresh('oral'),'researcher','describe',{change:'A transcript correction was made',input:'oral-source-v1',output:'oral-redacted-v2',evidence:'restricted-log-ref-1'});
 test('complete fictional oral-history handoff needs distinct decisions and receipt',()=>{
@@ -44,4 +44,29 @@ test('open sky route still requires curator and does not grant access',()=>{
  s=send(s,'curator','receipt',{decision:'reject',reason:'Missing checksum evidence'});
  assert.equal(s.receipt.decision,'reject');
  assert.equal(s.accessGranted,false);
+});
+test('six catalogue projects offer distinct assets, constraints and review routes',()=>{
+ const ids=['oral-heritage','stellar-survey','coastal-species','neighbourhood-voices','variant-study','brain-maps'];
+ assert.deepEqual(ids.map(id=>scenarios[id].catalogueId),ids);
+ for(const id of ids){const c=scenarios[id];for(const key of ['purpose','moment','assets','sample','known','unknown','options','outcome','question','task','checklist']) assert.ok(c[key]?.length,`${id}: ${key}`);assert.match(c.sample,/synthetic/i);}
+ assert.match(scenarios['stellar-survey'].sample,/FITS/i);
+ assert.match(scenarios['brain-maps'].sample,/BIDS/i);
+ assert.match(scenarios['coastal-species'].unknown,/re.identif/i);
+ assert.deepEqual(fresh('stellar-survey').required,['steward']);
+ assert.deepEqual(fresh('oral-heritage').required,['steward','privacy','community']);
+ assert.deepEqual(fresh('variant-study').required,['steward','privacy']);
+});
+test('generated draft separates catalogue, researcher and reviewer evidence',()=>{
+ let s=send(fresh('stellar-survey'),'researcher','describe',{change:'Recalibrated synthetic tiles',input:'sky-raw-v1',output:'sky-calibrated-v2',evidence:'pipeline-run-42'});
+ let d=draft(s);assert.match(d.record,/Catalogue.*sky-raw-v1/s);assert.match(d.record,/Researcher.*pipeline-run-42/s);assert.match(d.handoff,/checksum.*not verified/i);
+ s=send(s,'steward','determine',{decision:'accept',reason:'Pipeline reference traceable'});
+ d=draft(s);assert.match(d.record,/Data steward.*Pipeline reference traceable/s);assert.match(d.handoff,/candidate only/i);
+});
+test('unknown consent and location risk remain holds even after simulated reviews',()=>{
+ for(const id of ['variant-study','coastal-species']){
+  let s=send(fresh(id),'researcher','describe',{change:'Synthetic derivative proposed',input:scenarios[id].defaultInput,output:scenarios[id].defaultOutput,evidence:'safe-manifest-ref'});
+  for(const r of s.required)s=send(s,r,'determine',{decision:'accept',reason:'Review route considered in simulation'});
+  assert.throws(()=>send(s,'curator','receipt',{decision:'accept',reason:'Package checked'}),/hold/i);
+  assert.match(draft(s).handoff,/hold/i);
+ }
 });

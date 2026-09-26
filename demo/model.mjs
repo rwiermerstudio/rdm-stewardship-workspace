@@ -1,9 +1,6 @@
 // Entirely fictional in-memory state; never a permission or repository connector.
-export const scenarios = {
-  oral: {title:'Oral history • community custody',subtitle:'A corrected transcript becomes a restricted research copy.',required:['steward','privacy','community'],repository:'Meridian Community Collection',question:'Can even the catalogue description be visible, and who may request the data?',defaultInput:'oral-source-v1',defaultOutput:'oral-redacted-v2'},
-  sky: {title:'Sky survey • calibration',subtitle:'Trace a corrected sky image before considering an archive.',required:['steward'],repository:'Meridian Scale Archive',question:'Is the pipeline run reference sufficient to explain the correction?',defaultInput:'sky-calibration-v1',defaultOutput:'sky-calibration-v2'},
-  coastal: {title:'Coastal species • safe derivative',subtitle:'Generalise locations while keeping raw coordinates restricted.',required:['steward','privacy'],repository:'Meridian Archive (candidate only)',question:'Has the generalisation been checked so sensitive locations cannot be inferred?',defaultInput:'coast-restricted-v1',defaultOutput:'coast-generalised-v2'}
-};
+import {scenarios} from './scenarios.mjs';
+export {scenarios};
 export const roles={researcher:'Researcher',steward:'Data steward',privacy:'Privacy reviewer',community:'Community-appointed reviewer',curator:'Repository curator'};
 export function fresh(scenario='oral') {
  if (!scenarios[scenario]) throw Error('Unknown story');
@@ -37,10 +34,21 @@ export function transition(current,a) {
  } else if(type==='receipt') {
   if(role!=='curator'||!s.description||s.required.some(r=>s.decisions[r]?.decision!=='accept')) throw Error('Curator handoff requires all distinct reviews');
   if(!['accept','reject'].includes(a.decision)||!meaningful(a.reason)) throw Error('Choose receipt status and explain the manifest/fixity check');
+  if(a.decision==='accept' && ['coastal-species','variant-study'].includes(s.scenario)) throw Error('External safety/consent hold cannot be cleared in this simulation');
   s.receipt={decision:a.decision,reason:a.reason.trim(),id:`SIM-${s.events.length+1}`};
   event(s,role,`${a.decision} • simulated receipt`,a.reason.trim());
  } else throw Error('Unknown action');
  return s;
+}
+export function draft(s) {
+ const c=scenarios[s.scenario],d=s.description;
+ const record=[`Catalogue (fictional): ${c.catalogueId}; ${c.assets}; proposed method: ${c.known}`,
+  d?`Researcher (entered, not verified): ${d.change}; ${d.input} → ${d.output}; evidence pointer ${d.evidence}.`:'Researcher: no version change recorded yet.',
+  s.plan?`Researcher revision (entered, not verified): ${s.plan}.`:'Researcher revision: none.',
+  ...s.required.map(r=>s.decisions[r]?`${roles[r]} (simulated reviewer): ${s.decisions[r].decision}; ${s.decisions[r].reason}${r==='community'?`; metadata ${s.decisions[r].metadata}, data access ${s.decisions[r].access}`:''}.`:`${roles[r]}: decision pending.`),
+  s.receipt?`Curator (simulated): ${s.receipt.decision}, ${s.receipt.id}; ${s.receipt.reason}.`:'Curator: no simulated receipt.'].join('\n');
+ const handoff=`Automated draft, not a permission or deposit. ${c.repository} is a candidate only.\n${c.checklist}\nManifest, checksum and rights/access evidence: not verified; ask the curator and relevant authorities.\n${c.hold?`External hold: ${c.hold}`:'Review still requires independent human checks before any actual transfer.'}`;
+ return {record,handoff};
 }
 export function view(s,role) {
  const now=[],waiting=[],later=[];
