@@ -1,8 +1,9 @@
 import {scenarios,roles} from './scenarios.mjs';
+import {materialCatalog} from './material-catalog.mjs';
 export {scenarios,roles};
 export function fresh(id='oral-heritage'){
  if(!scenarios[id])throw Error('Unknown project');
- return {id,phase:'choice',choice:null,feedback:'',progress:false,reference:'',evidence:[],issues:[],plan:scenarios[id].safePlans[0].id,packagePlan:scenarios[id].packagePlans[0].id,reviews:{},revisedRoles:{},packageRepaired:false,receipt:null,events:[],publicMetadata:false,accessGranted:false};
+ return {id,phase:'choice',choice:null,feedback:'',progress:false,reference:'',evidence:[],issues:[],plan:scenarios[id].safePlans[0].id,packagePlan:scenarios[id].packagePlans[0].id,reviews:{},revisedRoles:{},packageRepaired:false,receipt:null,events:[],publicMetadata:false,accessGranted:false,materialAnswer:null,materialFeedback:''};
 }
 export function nextRole(s){return scenarios[s.id].reviewers.find(r=>!s.reviews[r])||null;}
 // The owner of the next in-exercise action, not an authenticated identity.
@@ -28,7 +29,13 @@ export function processView(s){
 export function transition(current,a){
  const s=structuredClone(current),c=scenarios[s.id];
  const note=(who,what)=>s.events.push(`${who}: ${what}`);
- if(a.type==='choose'){
+ if(a.type==='inspect'){
+  const material=materialCatalog[s.id],answer=material.question.options.find(x=>x.id===a.answer);
+  if(!answer)throw Error('Unknown material answer');
+  s.materialAnswer={answer:answer.id,label:answer.label,correct:answer.correct,materials:material.checks.flatMap(x=>x.files)};
+  s.materialFeedback=answer.correct?'You identified what the next person needs. Your observation is now in the handover. Next: continue the role choices, or download your draft if the route has ended.':'Try again. '+material.question.correction+' No permission or release status has changed.';
+  note('Learner material observation',answer.label);
+ }else if(a.type==='choose'){
   if(s.phase!=='choice')throw Error('Choose only at the question');
   const option=c.choices.find(o=>o.id===a.choice);if(!option)throw Error('Unknown choice');
   s.choice=option.id;s.feedback=option.feedback;s.progress=option.good;s.phase='feedback';note('Researcher',option.label);note('Handover note',option.consequence);
@@ -100,6 +107,7 @@ export function draft(s){
  const method=s.evidence.find(x=>x.kind==='proposed method link');
  const pointers=s.evidence.map(x=>`${x.id}: ${x.kind} — ${x.description} (generated here, unverified)`).join('\n')||'Not generated yet.';
  const sections=[
+  {label:'Material observation · learner answer',text:s.materialAnswer?`${s.materialAnswer.label} ${s.materialAnswer.correct?'Sound observation recorded.':'Needs correction; do not treat as a finding.'} Sources: ${s.materialAnswer.materials.join(', ')}.`:'Inspect the small fictional files and answer the material question. No observation recorded yet.'},
   {label:'Who receives this work',text:c.handoffLesson},
   {label:'Given in this exercise · not checked outside it',text:`Project: ${c.from}. Selected path: ${choice?.label||'none yet'}. These are example facts, not checked files.`},
   {label:'Still open · people need to check',text:open},

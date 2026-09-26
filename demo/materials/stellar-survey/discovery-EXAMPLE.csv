@@ -1,0 +1,2 @@
+obs_id,dataproduct_type,calib_level,obs_collection,access_format
+EXAMPLE-TILE,image,2,Meridian invented sky survey,image/fits

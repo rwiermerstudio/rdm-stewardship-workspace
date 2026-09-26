@@ -1,0 +1,6 @@
+{
+  "input": "scan-original-EXAMPLE.nii (absent)",
+  "output": "scan-EXAMPLE.nii (absent)",
+  "software": "EXAMPLE-defacer 0.1",
+  "status": "researcher reports completion; no execution here"
+}
