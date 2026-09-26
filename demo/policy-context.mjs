@@ -16,7 +16,7 @@ export function renderPolicyContext(root,catalog,id){
  const project=catalog.projects.find(p=>p.id===id);
  if(!project)throw Error('Unknown fictional project');
  root.replaceChildren();
- const back=document.createElement('a');back.href='#step';back.textContent='Back to the current decision';root.append(back);
+ const back=document.createElement('a');back.href='#action';back.textContent='Back to the current answer choices';root.append(back);
  root.append(text('p',`For ${project.title}: ${project.discipline}; ${project.classification} material, ${project.size_gib} GiB in the fictional project record. These are stated exercise facts, not checked files.`));
  root.append(text('p','The assignments below come from the fictional project and people entries. The action descriptions explain this practice route; they do not appoint anyone in a real institution.'));
  const roles=text('h3','Who is responsible');root.append(roles);
@@ -46,6 +46,6 @@ export function renderPolicyContext(root,catalog,id){
  const repositoryLink=document.createElement('a');repositoryLink.href='policy-documents.html#repositories-title';repositoryLink.target='_blank';repositoryLink.rel='noopener';repositoryLink.textContent='Read candidate repository capabilities and their limits';root.append(repositoryLink);
  root.append(text('h3','Where these rules stop'));
  root.append(text('p','These fictional documents are complete only for this short exercise, not legal advice or evidence of consent, permission, rights, data inspection or repository acceptance. They omit real law, agreements, ethics decisions and repository terms. Real institutions need current governing documents and authorized people to decide access. A proposed metadata title can disclose information even when files stay closed. Consent owners decide reuse, the community-appointed circle decides community discoverability and use, and an independent ecology authority decides location risk outside this exercise. A reviewer response here cannot clear an external hold.'));
- const returnLink=document.createElement('a');returnLink.href='#step';returnLink.textContent='Back to the current decision';root.append(returnLink);
+ const returnLink=document.createElement('a');returnLink.href='#action';returnLink.textContent='Back to the current answer choices';root.append(returnLink);
  const link=document.createElement('a');link.href='meridian-institute.json';link.target='_blank';link.rel='noopener';link.textContent='Read the fictional institution catalogue (policies, people, projects and repositories)';root.append(link);
 }
