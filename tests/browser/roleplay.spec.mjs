@@ -39,3 +39,27 @@ test('contrasting route and accessibility',async({page},testInfo)=>{
  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1);expect(overflow).toBe(false);
  await page.screenshot({path:`test-results/${testInfo.project.name}-sky.png`,fullPage:true});
 });
+test('role briefing changes with selected reviewer and preserves the scenario',async({page})=>{
+ await page.goto('/');
+ await expect(page.locator('#moment')).toContainText('You are the researcher');
+ await role(page,'community');
+ await expect(page.locator('#moment')).toContainText('You are the community-appointed reviewer');
+ await expect(page.locator('#moment')).not.toContainText('You are the researcher');
+ await expect(page.locator('#purpose')).toContainText('Living Heritage Collective');
+});
+test('external consent hold does not offer a curator acceptance',async({page})=>{
+ await page.goto('/');await page.getByRole('button',{name:/Variant study/}).click();
+ await page.getByLabel('What changed?').fill('Invented variant-caller update');
+ await page.getByLabel('Safe evidence reference').fill('fictional-run-1');
+ await page.getByRole('button',{name:'Record fictional change'}).click();
+ await decide(page,'steward','accept','Lineage documentation is traceable');
+ await decide(page,'privacy','accept','Documentation reviewed but consent remains unknown');
+ await role(page,'curator');
+ await expect(page.locator('#context')).toContainText('Unknown consent');
+ await expect(page.locator('#now')).toContainText('External hold');
+ await expect(page.locator('#later')).not.toContainText('Only after review');
+ await expect(page.getByRole('button',{name:'Record simulated receipt'})).toHaveCount(0);
+ await role(page,'researcher');
+ await expect(page.locator('#waiting')).not.toContainText('Wait for repository curator');
+ await expect(page.locator('#now')).toContainText('External hold');
+});

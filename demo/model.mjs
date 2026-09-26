@@ -34,7 +34,7 @@ export function transition(current,a) {
  } else if(type==='receipt') {
   if(role!=='curator'||!s.description||s.required.some(r=>s.decisions[r]?.decision!=='accept')) throw Error('Curator handoff requires all distinct reviews');
   if(!['accept','reject'].includes(a.decision)||!meaningful(a.reason)) throw Error('Choose receipt status and explain the manifest/fixity check');
-  if(a.decision==='accept' && ['coastal-species','variant-study'].includes(s.scenario)) throw Error('External safety/consent hold cannot be cleared in this simulation');
+  if(a.decision==='accept' && scenarios[s.scenario].hardHold) throw Error('External safety/consent hold cannot be cleared in this simulation');
   s.receipt={decision:a.decision,reason:a.reason.trim(),id:`SIM-${s.events.length+1}`};
   event(s,role,`${a.decision} • simulated receipt`,a.reason.trim());
  } else throw Error('Unknown action');
@@ -59,13 +59,14 @@ export function view(s,role) {
   if(role==='researcher') {
    if(returned.length) now.push(`Revise the plan for ${returned.map(r=>roles[r]).join(', ')}; their reason appears below.`);
    if(pending.length) waiting.push(`Wait for ${pending.map(r=>roles[r]).join(', ')} to answer the scoped question.`);
+   else if(scenarios[s.scenario].hardHold) now.push(`External hold: ${scenarios[s.scenario].hold} Seek the authorised review outside this simulation.`);
    else if(!s.receipt) waiting.push('Wait for repository curator to check the handoff.');
    if(s.receipt?.decision==='reject') now.push('Repair the preservation package and ask the curator to check again.');
   } else if(s.decisions[role]?.decision!=='accept' && s.decisions[role]) waiting.push('Wait for the researcher to revise the returned plan.');
  else if(s.required.includes(role) && pending.includes(role)) now.push(`Record a fictional ${roles[role].toLowerCase()} determination with a reason.`);
-  else if(role==='curator' && !pending.length) now.push('Check the proposed package and record a simulated acceptance or rejection receipt.');
+  else if(role==='curator' && !pending.length) now.push(scenarios[s.scenario].hardHold?`External hold: ${scenarios[s.scenario].hold} No receipt can be issued here.`:'Check the proposed package and record a simulated acceptance or rejection receipt.');
   else waiting.push('Another role owns the next action.');
-  later.push(s.receipt?.decision==='accept'?'External rights, access and actual custody still require real checks.':'Only after review: a curator may consider a simulated receipt.');
+  later.push(scenarios[s.scenario].hardHold?'Only an authorised external review can resolve the hold; this simulation has no clearance action.':s.receipt?.decision==='accept'?'External rights, access and actual custody still require real checks.':'Only after review: a curator may consider a simulated receipt.');
  }
  return {now,waiting,later};
 }
