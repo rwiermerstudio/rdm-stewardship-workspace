@@ -14,7 +14,7 @@ for(const [id,c] of Object.entries(scenarios))test(`${id}: risky decision change
  assert.equal(s.publicMetadata,false);assert.equal(s.accessGranted,false);
  if(c.hold){assert.equal(s.phase,'hold');assert.throws(()=>act(s,'receipt',{role:'curator',decision:'ready'}));}
  else if(id==='stellar-survey'){assert.equal(s.phase,'curator');assert.throws(()=>act(s,'receipt',{role:'curator',decision:'ready'}));}
- else {assert.equal(s.phase,'pending');assert.match(draft(s).handoff,/still needs|unresolved/i);assert.throws(()=>act(s,'receipt',{role:'curator',decision:'ready'}));}
+ else {assert.equal(s.phase,'pending');assert.match(draft(s).handoff,/People still need to check:/i);assert.throws(()=>act(s,'receipt',{role:'curator',decision:'ready'}));}
 });
 test('returned question cannot be reopened without changed safe plan',()=>{
  let s=prepared('oral-heritage');s=act(s,'review',{role:'steward',decision:'return',reason:'steward-evidence'});

@@ -17,7 +17,7 @@ test('a recorded missing-evidence response remains an open named question',()=>{
  s=transition(s,{type:'review',role:'steward',decision:'needs-more',reason:'steward-evidence'});
  assert.equal(s.phase,'curator');assert.ok(processView(s).open.some(x=>x.includes('calibration inputs')));
  assert.match(draft(s).record,/calibration inputs/);
- assert.notEqual(processView(s).steps.find(x=>x.name==='Independent questions').status,'recorded');
+ assert.notEqual(processView(s).steps.find(x=>x.name==='Colleagues check').status,'recorded');
 });
 test('record preserves method pointer and all corrections, not only newest',()=>{
  let s=fresh('oral-heritage');s=transition(s,{type:'choose',choice:'ask'});s=transition(s,{type:'continue'});s=transition(s,{type:'record'});
@@ -39,12 +39,12 @@ test('record creates an automatic invented evidence identifier without subject i
 });
 test('return and repair preserve an auditable open-versus-fixed record',()=>{
  let s=prepared('stellar-survey');s=send(s,'review',{role:'steward',decision:'return',reason:'steward-evidence'});
- const issue=s.issues[0];assert.equal(issue.status,'open');assert.match(issue.question,/run log/i);
+ const issue=s.issues[0];assert.equal(issue.status,'open');assert.match(issue.question,/processing record/i);
  s=send(s,'revise',{plan:'fix-steward'});
  assert.equal(s.reference,'EV-STELLAR-SURVEY-002');assert.equal(s.issues[0].id,issue.id);
  assert.equal(s.issues[0].status,'fixed in draft');assert.equal(s.issues[0].evidence,s.reference);
  assert.match(s.issues[0].resolution,/calibration inputs/i);
- assert.match(processView(s).open.join(' '),/capacity|integrity/i);
+ assert.match(processView(s).open.join(' '),/enough space.*copies are unchanged/i);
  assert.match(processView(s).fixed.join(' '),/calibration inputs/i);
 });
 test('all roles remain visible while only next reviewer can act',()=>{
@@ -57,20 +57,20 @@ test('all roles remain visible while only next reviewer can act',()=>{
  assert.equal(view.roles.find(x=>x.role==='privacy').status,'next');
  assert.match(view.open.join(' '),/consent|community/i);
  assert.equal(view.roles.find(x=>x.role==='curator').status,'not in this practice route');
- assert.equal(view.steps.find(x=>x.name==='Repository question').status,'not in this practice route');
+ assert.equal(view.steps.find(x=>x.name==='Ask the archive').status,'not in this practice route');
 });
 test('reviewer return appears as returned work, not a waiting process step',()=>{
  let s=prepared('oral-heritage');s=send(s,'review',{role:'steward',decision:'return',reason:'steward-evidence'});
  const view=processView(s);
  assert.equal(view.roles.find(x=>x.role==='steward').status,'returned');
- assert.equal(view.steps.find(x=>x.name==='Independent questions').status,'returned');
+ assert.equal(view.steps.find(x=>x.name==='Colleagues check').status,'returned');
 });
 test('curator return appears as returned work, not a waiting role and step',()=>{
  let s=prepared('stellar-survey');s=send(s,'review',{role:'steward',decision:'noted',reason:'steward-scope'});
  s=send(s,'receipt',{role:'curator',decision:'return'});
  const view=processView(s);
  assert.equal(view.roles.find(x=>x.role==='curator').status,'returned');
- assert.equal(view.steps.find(x=>x.name==='Repository question').status,'returned');
+ assert.equal(view.steps.find(x=>x.name==='Ask the archive').status,'returned');
 });
 test('several returned questions retain all proposed corrections in the readable draft',()=>{
  let s=prepared('oral-heritage');
