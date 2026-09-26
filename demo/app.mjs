@@ -1,7 +1,7 @@
 import {fresh,transition,draft,nextRole,actionOwner,processView,scenarios,roles} from './model.mjs';
-import {renderPolicyContext} from './policy-context.mjs';
+import {renderPolicyContext,applicablePolicies,policyLink} from './policy-context.mjs';
 let state=fresh(),role='researcher',manualSwitch=false,catalog=null;
-fetch('meridian-institute.json').then(response=>{if(!response.ok)throw Error(`HTTP ${response.status}`);return response.json();}).then(data=>{catalog=data;renderPolicyContext($('policy-context'),catalog,state.id);}).catch(()=>set('policy-context','The fictional catalogue could not be loaded. Do not use the exercise without its source documents.'));
+fetch('meridian-institute.json').then(response=>{if(!response.ok)throw Error(`HTTP ${response.status}`);return response.json();}).then(data=>{catalog=data;render();}).catch(()=>set('policy-context','The fictional catalogue could not be loaded. Do not use the exercise without its source documents.'));
 const $=id=>document.getElementById(id);
 const set=(id,value)=>{$(id).textContent=value;};
 const button=(parent,label,handler,css='')=>{const el=document.createElement('button');el.type='button';el.textContent=label;el.className=css;el.addEventListener('click',handler);parent.append(el);return el;};
@@ -18,7 +18,16 @@ $('role').addEventListener('change',event=>{role=event.target.value;manualSwitch
 $('reset').addEventListener('click',()=>{state=fresh(state.id);role='researcher';manualSwitch=false;$('role').value=role;render();$('project-title').focus();});
 function render(){
  const c=scenarios[state.id],d=draft(state),a=$('action');a.replaceChildren();
- if(catalog)renderPolicyContext($('policy-context'),catalog,state.id);
+ if(catalog){
+  renderPolicyContext($('policy-context'),catalog,state.id);
+  const references=$('decision-policy');references.replaceChildren();
+  references.append(document.createTextNode('Read the applicable fictional sections: '));
+  const project=catalog.projects.find(p=>p.id===state.id);
+  applicablePolicies(catalog,project).forEach((policy,index)=>{
+   if(index)references.append(document.createTextNode(' · '));
+   references.append(policyLink(policy));
+  });
+ }
  $('role').value=role;document.querySelector('.task').dataset.currentRole=role;document.querySelector('#process-view').dataset.currentRole=role;
  for(const b of document.querySelectorAll('.project'))b.setAttribute('aria-pressed',String(b.dataset.id===state.id));
  set('discipline',`${c.discipline} · ${c.group} · ${c.person}`);set('project-title',c.title);set('arrival',c.arrival);

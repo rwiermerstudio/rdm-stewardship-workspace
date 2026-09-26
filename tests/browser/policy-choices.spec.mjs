@@ -1,6 +1,16 @@
 import {test,expect} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 async function start(page,id,good){await page.goto('/');await page.locator(`.project[data-id="${id}"]`).click();await page.locator(`[data-choice="${good}"]`).click();await page.getByRole('button',{name:'Continue to the change record'}).click();await page.getByRole('button',{name:'Make draft and ask reviewers'}).click();}
+test('numbered source documents navigate by contents, remain readable on phone, and pass axe',async({page})=>{
+ await page.setViewportSize({width:320,height:568});
+ await page.goto('/policy-documents.html');
+ await page.getByRole('navigation',{name:'Document contents'}).getByRole('link',{name:/GEN-USE §5/}).click();
+ await expect(page).toHaveURL(/#GEN-USE-s5$/);
+ await expect(page.locator('#GEN-USE-s5')).toBeVisible();
+ await expect(page.locator('#GEN-USE-s5 + p')).toContainText('Only the authorized consent owner');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1)).toBe(false);
+ expect((await new AxeBuilder({page}).analyze()).violations).toEqual([]);
+});
 test('policy context follows all six cases with source citations and limitations',async({page})=>{
  for(const [id,citation] of [['stellar-survey','ASTRO-FITS §1'],['neighbourhood-voices','SOC-DDI §2'],['variant-study','GEN-USE §5'],['oral-heritage','HER-COMM agreement §2'],['coastal-species','BIO-DWC §2'],['brain-maps','NEU-BIDS §4']]){
   await page.goto('/');await page.locator(`.project[data-id="${id}"]`).click();
@@ -11,7 +21,17 @@ test('policy context follows all six cases with source citations and limitations
   await expect(page.locator('#policy-context')).toContainText('not legal');
   await expect(page.locator('#policy-context')).toContainText('researcher: proposes');
   await expect(page.locator('#policy-context')).toContainText('Practice record: change');
-  await expect(page.locator('#policy-context a')).toHaveAttribute('href','meridian-institute.json');
+  await expect(page.locator('#policy-context a[href="meridian-institute.json"]')).toHaveCount(1);
+  const links=page.locator('#decision-policy a');
+  await expect(links.first()).toHaveAttribute('href','policy-documents.html#MI-DOC-s2');
+  const cited=page.locator('#policy-context a').filter({hasText:citation});
+  await expect(cited).toHaveCount(1);
+  const href=await cited.getAttribute('href');
+  await expect(page.locator(`#decision-policy a[href="${href}"]`)).toBeVisible();
+  await cited.click();
+  await expect(page).toHaveURL(new RegExp(`${href.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}$`));
+  await expect(page.locator(href.slice(href.indexOf('#')))).toBeVisible();
+  await expect(page.locator('main')).toContainText('No passage grants permission');
  }
 });
 test('radio cards preserve return, repair, curator and keyboard handoffs on narrow screen',async({page})=>{
