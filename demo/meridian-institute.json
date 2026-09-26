@@ -1,0 +1,57 @@
+{
+  "institution": {"id":"meridian","name":"Meridian Institute for Research (fictional)","country":"NL","status":"synthetic","policy_notice":"All rules, people, projects, capacities and services below are invented for architecture testing; not legal or institutional guidance."},
+  "people": [
+    {"id":"steward-arts","name":"Dr Noor Vale","role":"data-steward","disciplines":["history","social-science"],"contact":"role:arts-data-steward"},
+    {"id":"steward-life","name":"Dr Imani Leen","role":"data-steward","disciplines":["genomics","biodiversity"],"contact":"role:life-data-steward"},
+    {"id":"steward-compute","name":"Alex Sen","role":"data-steward","disciplines":["astronomy","neuroimaging"],"contact":"role:compute-data-steward"},
+    {"id":"privacy","name":"Sam Neri","role":"privacy-reviewer","disciplines":[],"contact":"role:privacy-office"},
+    {"id":"preservation","name":"Jo Ellis","role":"repository-curator","disciplines":[],"contact":"role:preservation-office"},
+    {"id":"community","name":"Community-appointed review circle","role":"community-authority","disciplines":[],"contact":"external:community-agreement-channel"},
+    {"id":"researcher-01","name":"Dr Ada Rell","role":"researcher","disciplines":["astronomy"],"contact":"role:researcher-01"},
+    {"id":"researcher-02","name":"Dr Malik Osei","role":"researcher","disciplines":["social-science"],"contact":"role:researcher-02"},
+    {"id":"researcher-03","name":"Dr Elin Roe","role":"researcher","disciplines":["genomics"],"contact":"role:researcher-03"},
+    {"id":"researcher-04","name":"Dr Tova Mer","role":"researcher","disciplines":["history"],"contact":"role:researcher-04"},
+    {"id":"researcher-05","name":"Dr Paz Linn","role":"researcher","disciplines":["biodiversity"],"contact":"role:researcher-05"},
+    {"id":"researcher-06","name":"Dr Ria Chen","role":"researcher","disciplines":["neuroimaging"],"contact":"role:researcher-06"}
+  ],
+  "groups": [
+    {"id":"sky-lab","name":"Sky Survey Lab","lead":"researcher-01","members":["researcher-01"]},
+    {"id":"cities","name":"Urban Lives Group","lead":"researcher-02","members":["researcher-02"]},
+    {"id":"genome","name":"Human Variation Group","lead":"researcher-03","members":["researcher-03"]},
+    {"id":"heritage","name":"Living Heritage Collective","lead":"researcher-04","members":["researcher-04"]},
+    {"id":"ecology","name":"Coastal Ecology Unit","lead":"researcher-05","members":["researcher-05"]},
+    {"id":"brain","name":"Neural Imaging Group","lead":"researcher-06","members":["researcher-06"]}
+  ],
+  "practices": [
+    {"id":"change","description":"Version source and derivative; record actor, date, method, software and QC evidence; supersede rather than silently rewrite."},
+    {"id":"fixity","description":"Create versioned manifest with checksums; verify on handoff and on repository-defined schedule, with named custodian."},
+    {"id":"safe-metadata","description":"Review titles, locations and descriptive fields for disclosure before any public export."},
+    {"id":"living-plan","description":"Link approved decision dockets to plan snapshots at collection, transformation and deposit checkpoints."}
+  ],
+  "repositories": [
+    {"id":"meridian-archive","name":"Meridian General Archive","formats":["csv","json","txt","tiff","pdfa","parquet"],"max_gib":500,"allowed_classifications":["open-candidate","restricted"],"residency":["NL","EU"],"access":["open","mediated"],"metadata_visibility":["public","private"],"custodian":"preservation","status":"candidate-only"},
+    {"id":"meridian-vault","name":"Meridian Secure Data Vault","formats":["csv","json","txt","wav","fastq","vcf","nii","parquet"],"max_gib":50000,"allowed_classifications":["restricted"],"residency":["NL"],"access":["mediated","enclave"],"metadata_visibility":["private"],"custodian":"preservation","status":"candidate-only"},
+    {"id":"meridian-scale","name":"Meridian Large-Object Archive","formats":["fits","hdf5","zarr","parquet","csv"],"max_gib":200000,"allowed_classifications":["open-candidate"],"residency":["NL","EU"],"access":["open"],"metadata_visibility":["public"],"custodian":"preservation","status":"candidate-only"},
+    {"id":"meridian-community","name":"Meridian Community-Governed Collection","community_only":true,"formats":["wav","tiff","txt","json","csv"],"max_gib":2000,"allowed_classifications":["restricted"],"residency":["NL"],"access":["mediated"],"metadata_visibility":["private"],"custodian":"preservation","status":"candidate-only"}
+  ],
+  "policies": [
+    {"id":"MI-DOC","version":"2026.1","authority":"institution","scope":{"all":true},"effect":"document","artifact":"versioned change/provenance record","reason":"Synthetic institutional data traceability rule","citation":"MI-DOC §2 (fictional)","approved_by":"fictional policy board","effective_from":"2026-01-01"},
+    {"id":"MI-PRES","version":"2026.1","authority":"institution","scope":{"all":true},"effect":"document","artifact":"manifest, format inventory, rights statement and preservation review","reason":"Synthetic preservation handoff rule","citation":"MI-PRES §4 (fictional)","approved_by":"fictional policy board","effective_from":"2026-01-01"},
+    {"id":"MI-PRIV","version":"2026.2","authority":"institution","scope":{"classification":"restricted"},"effect":"review","owner":"privacy","reason":"Human-data or confidentiality review; classification alone does not determine lawful basis","citation":"MI-PRIV §3 (fictional)","approved_by":"fictional policy board","effective_from":"2026-02-01"},
+    {"id":"ASTRO-FITS","version":"1.0","authority":"discipline","scope":{"discipline":"astronomy"},"effect":"document","artifact":"FITS processing history, calibration/workflow version and provenance link","reason":"Synthetic astronomy method profile","citation":"ASTRO-FITS §1 (fictional)","approved_by":"fictional astronomy panel","effective_from":"2026-01-01"},
+    {"id":"SOC-DDI","version":"1.0","authority":"discipline","scope":{"discipline":"social-science"},"effect":"document","artifact":"questionnaire, codebook and DDI-compatible variable metadata","reason":"Synthetic social science profile","citation":"SOC-DDI §2 (fictional)","approved_by":"fictional social science panel","effective_from":"2026-01-01"},
+    {"id":"GEN-USE","version":"2.0","authority":"discipline","scope":{"discipline":"genomics"},"effect":"review","owner":"privacy","reason":"Review consent and approved purpose before any reuse","citation":"GEN-USE §5 (fictional)","approved_by":"fictional genomics panel","effective_from":"2026-01-01"},
+    {"id":"HER-COMM","version":"1.0","authority":"community","scope":{"community_governed":true},"effect":"review","owner":"community","reason":"Community-appointed authority reviews use and even discoverability","citation":"HER-COMM agreement §2 (fictional)","approved_by":"fictional community-appointed circle","effective_from":"2026-01-01"},
+    {"id":"BIO-DWC","version":"1.0","authority":"discipline","scope":{"discipline":"biodiversity"},"effect":"document","artifact":"Darwin Core-compatible occurrence metadata with generalised sensitive coordinates","reason":"Synthetic biodiversity profile; location disclosure needs review","citation":"BIO-DWC §2 (fictional)","approved_by":"fictional ecology panel","effective_from":"2026-01-01"},
+    {"id":"NEU-BIDS","version":"1.0","authority":"discipline","scope":{"discipline":"neuroimaging"},"effect":"document","artifact":"BIDS-compatible imaging sidecars and de-identification review","reason":"Synthetic imaging profile","citation":"NEU-BIDS §4 (fictional)","approved_by":"fictional imaging panel","effective_from":"2026-01-01"},
+    {"id":"FUN-OPEN","version":"1.0","authority":"funder","scope":{"funder":"open-futures"},"effect":"preference","artifact":"publish reusable metadata and suitable open derivatives after rights review","reason":"Synthetic funder openness preference, not an access grant","citation":"FUN-OPEN §6 (fictional)","approved_by":"fictional funder officer","effective_from":"2026-01-01"}
+  ],
+  "projects": [
+    {"id":"stellar-survey","title":"Time-domain sky mosaic (fictional)","group":"sky-lab","pi":"researcher-01","steward":"steward-compute","discipline":"astronomy","funder":"open-futures","size_gib":120000,"formats":["fits","zarr"],"classification":"open-candidate","residency":"EU","community_governed":false,"consent_status":"not-applicable","metadata_visibility":"public","inputs":["sky-raw-v1"],"output":"sky-calibrated-v2","method":"calibration pipeline commit identifier","change_kind":"transformation","standards":["FITS","W3C PROV","DataCite","RO-Crate"]},
+    {"id":"neighbourhood-voices","title":"Interviews about neighbourhood change (fictional)","group":"cities","pi":"researcher-02","steward":"steward-arts","discipline":"social-science","funder":"city-research","size_gib":80,"formats":["wav","txt","csv"],"classification":"restricted","residency":"NL","community_governed":false,"consent_status":"limited","metadata_visibility":"private","inputs":["interviews-v1"],"output":"coded-interviews-v2","method":"qualitative coding protocol v2","change_kind":"transformation","standards":["DDI","W3C PROV","DataCite"]},
+    {"id":"variant-study","title":"Rare-condition variant cohort (fictional)","group":"genome","pi":"researcher-03","steward":"steward-life","discipline":"genomics","funder":"health-research","size_gib":40000,"formats":["fastq","vcf"],"classification":"restricted","residency":"NL","community_governed":false,"consent_status":"unknown","metadata_visibility":"private","inputs":["sequence-v1"],"output":"variant-calls-v2","method":"variant caller version reference","change_kind":"transformation","standards":["DUO","W3C PROV"]},
+    {"id":"oral-heritage","title":"Community-governed oral histories (fictional)","group":"heritage","pi":"researcher-04","steward":"steward-arts","discipline":"history","funder":"heritage-fund","size_gib":600,"formats":["wav","tiff","txt"],"classification":"restricted","residency":"NL","community_governed":true,"consent_status":"limited","metadata_visibility":"private","inputs":["recordings-v1"],"output":"curated-collection-v2","method":"community-guided transcription and description","change_kind":"transformation","standards":["CARE","W3C PROV","PREMIS"]},
+    {"id":"coastal-species","title":"Coastal occurrence observations (fictional)","group":"ecology","pi":"researcher-05","steward":"steward-life","discipline":"biodiversity","funder":"open-futures","size_gib":300,"formats":["csv","tiff"],"classification":"restricted","residency":"NL","community_governed":false,"consent_status":"not-applicable","metadata_visibility":"private","inputs":["observations-v1"],"output":"generalised-coordinates-v2","method":"coordinate generalisation protocol v2","change_kind":"transformation","standards":["Darwin Core","DataCite","W3C PROV"]},
+    {"id":"brain-maps","title":"Longitudinal MRI series (fictional)","group":"brain","pi":"researcher-06","steward":"steward-compute","discipline":"neuroimaging","funder":"health-research","size_gib":1800,"formats":["nii","json"],"classification":"restricted","residency":"NL","community_governed":false,"consent_status":"confirmed","metadata_visibility":"private","inputs":["mri-session-v1"],"output":"defaced-mri-v2","method":"defacing pipeline version reference","change_kind":"transformation","standards":["BIDS","W3C PROV","PREMIS"]}
+  ]
+}

@@ -18,6 +18,9 @@ class InstitutionTests(unittest.TestCase):
     def setUp(self):
         self.data = json.loads(SOURCE.read_text())
 
+    def test_published_catalogue_matches_evaluator_source(self):
+        self.assertEqual((ROOT / "demo/meridian-institute.json").read_bytes(), SOURCE.read_bytes())
+
     def test_catalog_references_and_coverage_are_valid(self):
         report = catalog.validate_catalog(self.data)
         self.assertEqual(report["projects"], 6)

@@ -29,6 +29,9 @@
 #process-view[data-current-role]{border-top:4px solid var(--role-accent)}
 @media(max-width:760px){#role-lanes .current-role{outline-width:3px}#role-lanes .current-role .role-status{font-size:.7rem}}
 .role-short{display:none}
+#action{scroll-margin-top:180px}
+@media(max-width:760px){#action{scroll-margin-top:240px}}
+.policy-overview{background:#fff;border:1px solid #d3ded5;border-radius:.6rem;padding:1rem 1.25rem;margin:1.25rem 0}.policy-overview h2{margin:.2rem 0}.policy-overview h3{font-size:1.08rem;margin:1rem 0 .3rem}.policy-overview ul{margin:.3rem 0;padding-left:1.4rem}.policy-overview li{margin:.35rem 0;max-width:95ch}.policy-overview p{max-width:95ch}.answer-cards{border:0;padding:0;margin:1rem 0;min-width:0}.answer-cards legend{font-weight:700;margin-bottom:.4rem}.answer-card{display:flex;align-items:flex-start;gap:.7rem;padding:.85rem 1rem;margin:.45rem 0;border:1px solid #a9bbb0;border-radius:.5rem;background:#fff;color:#1d4037;cursor:pointer;line-height:1.45;min-height:52px}.answer-card:hover,.answer-card:has(input:checked){border-color:#125f48;background:#e9f3e8}.answer-card:has(input:checked){border-width:2px}.answer-card:has(input:focus-visible){outline:3px solid #a74d25;outline-offset:3px}.answer-card input{margin:.25rem 0 0;flex:none;accent-color:#275b48}.answer-card span{overflow-wrap:anywhere}
 /* A short viewport needs the entire map and the action below it, not a tall overlay. */
 @media(max-width:360px){
  #process-view{padding:.35rem .45rem}#process-view h2{font-size:.95rem;margin-bottom:.2rem}
@@ -37,3 +40,7 @@
  #role-lanes .role-short{display:block;font-weight:700}#role-lanes .role-status,#role-lanes .current-role .role-status{font-size:.62rem}
  #role-lanes summary{font-size:.64rem}#step,[tabindex="-1"]{scroll-margin-top:240px}
 }
+
+/* Source documents remain readable without opening the JSON catalogue. */
+.documents{max-width:900px}.documents>p{max-width:75ch}.documents nav,.documents .document{background:#fff;border:1px solid #d3ded5;border-radius:.6rem;padding:1rem 1.4rem;margin:1.25rem 0}.documents nav ol{columns:2;padding-left:1.5rem}.documents nav li{break-inside:avoid;margin:.35rem 0}.documents .document{padding-bottom:1.5rem}.documents .document h2{margin:.2rem 0}.documents .document h3{margin:1.4rem 0 .3rem;scroll-margin-top:1rem}.documents .document p{max-width:75ch;margin:.4rem 0;line-height:1.65}.documents a,#decision-policy a,.policy-overview a{color:#125f48;text-decoration:underline;text-underline-offset:.16em}.documents a:focus-visible,#decision-policy a:focus-visible,.policy-overview a:focus-visible{outline:3px solid #a74d25;outline-offset:3px}#decision-policy{background:#edf2eb;border-left:3px solid #477e63;padding:.7rem .9rem;margin:1rem 0;line-height:1.8}
+@media(max-width:620px){.documents nav ol{columns:1}.documents nav,.documents .document{padding:.9rem 1rem}}
