@@ -84,7 +84,7 @@ test('overview offers a direct return to the active task',async({page})=>{
  await back.click();
  await expect(page).toHaveURL(/#action$/);
  await expect(page.locator('#role')).toHaveValue('steward');
- const geometry=await page.evaluate(()=>({card:document.querySelector('.answer-card')?.getBoundingClientRect().top,map:document.querySelector('#process-view').getBoundingClientRect().bottom,viewport:innerHeight}));
+ const geometry=await page.evaluate(()=>({card:document.querySelector('#action .answer-card')?.getBoundingClientRect().top,map:document.querySelector('#process-view').getBoundingClientRect().bottom,viewport:innerHeight}));
  expect(geometry.card).toBeGreaterThanOrEqual(geometry.map);
  expect(geometry.card).toBeLessThan(geometry.viewport);
 });

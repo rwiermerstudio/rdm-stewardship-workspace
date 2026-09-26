@@ -1,0 +1,10 @@
+{
+  "id": "EXAMPLE-run-02",
+  "inputVersion": "raw-v0",
+  "outputVersion": "calibrated-v2",
+  "software": "EXAMPLE-calibrator 0.2",
+  "parameters": {
+    "offset": 2
+  },
+  "status": "claimed; not executed here"
+}

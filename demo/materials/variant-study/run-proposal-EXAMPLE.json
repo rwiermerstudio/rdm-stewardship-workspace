@@ -1,0 +1,9 @@
+{
+  "software": "EXAMPLE-variant-workflow 0.1",
+  "input": "sequence-v1 (not supplied)",
+  "output": "variant-calls-v2 (not produced)",
+  "status": "proposed; not executed",
+  "parameters": {
+    "reference": "EXAMPLE-reference"
+  }
+}

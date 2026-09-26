@@ -20,7 +20,7 @@ for(const width of [320,1280])test(`reading rules mid-review preserves the answe
   await expect(page.locator('#project-title')).toHaveText('Oral histories');
   await expect(page.locator('#role')).toHaveValue('privacy');
   await expect(page.locator('#review-reason input').first()).toBeChecked();
-  const g=await page.evaluate(()=>({card:document.querySelector('.answer-card').getBoundingClientRect().top,map:document.querySelector('#process-view').getBoundingClientRect().bottom,height:innerHeight}));
+  const g=await page.evaluate(()=>({card:document.querySelector('#action .answer-card').getBoundingClientRect().top,map:document.querySelector('#process-view').getBoundingClientRect().bottom,height:innerHeight}));
   expect(g.card).toBeGreaterThanOrEqual(g.map);expect(g.card).toBeLessThan(g.height);
  }
 });

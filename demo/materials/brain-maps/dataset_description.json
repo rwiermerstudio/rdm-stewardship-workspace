@@ -1,0 +1,11 @@
+{
+  "Name": "EXAMPLE brain maps companion lesson",
+  "BIDSVersion": "1.10.0",
+  "DatasetType": "derivative",
+  "GeneratedBy": [
+    {
+      "Name": "EXAMPLE-defacer",
+      "Version": "0.1"
+    }
+  ]
+}

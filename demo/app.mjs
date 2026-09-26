@@ -1,12 +1,16 @@
 import {fresh,transition,draft,nextRole,actionOwner,processView,scenarios,roles} from './model.mjs';
 import {renderPolicyContext,applicablePolicies,policyLink} from './policy-context.mjs';
+import {createMaterialPanel} from './material-panel.mjs';
 let state=fresh(),role='researcher',manualSwitch=false,catalog=null;
 fetch('meridian-institute.json').then(response=>{if(!response.ok)throw Error(`HTTP ${response.status}`);return response.json();}).then(data=>{catalog=data;render();}).catch(()=>set('policy-context','The fictional catalogue could not be loaded. Do not use the exercise without its source documents.'));
 const $=id=>document.getElementById(id);
 const set=(id,value)=>{$(id).textContent=value;};
 const button=(parent,label,handler,css='')=>{const el=document.createElement('button');el.type='button';el.textContent=label;el.className=css;el.addEventListener('click',handler);parent.append(el);return el;};
 const paragraph=(parent,text)=>{const el=document.createElement('p');el.textContent=text;parent.append(el);};
-const action=a=>{try{state=transition(state,a);role=actionOwner(state)||role;manualSwitch=false;$('role').value=role;render();$('step').focus();}catch(error){set('feedback',error.message);}};
+const action=a=>{try{state=transition(state,a);role=actionOwner(state)||role;manualSwitch=false;$('role').value=role;render();$(a.type==='inspect'?'material-feedback':'step').focus();}catch(error){set('feedback',error.message);}};
+const materialPanel=createMaterialPanel($('material-panel'),()=>state,answer=>action({type:'inspect',answer}));
+$('inspect-link').addEventListener('click',()=>{$('material-panel').open=true;});
+$('download-handover').addEventListener('click',async()=>{try{await materialPanel.download();set('download-feedback','Local package prepared. It includes the original exercise files, real text-check results and unresolved human questions. No upload or approval occurred.');}catch(error){set('download-feedback',error.message);}});
 const list=(id,items)=>{const root=$(id);root.replaceChildren();for(const text of items){const li=document.createElement('li');li.textContent=text;root.append(li);}};
 const renderRecord=sections=>{const root=$('record');root.replaceChildren();for(const item of sections){const term=document.createElement('dt'),description=document.createElement('dd');term.textContent=item.label;description.textContent=item.text;root.append(term,description);}};
 const renderRoles=items=>{const root=$('role-lanes');root.replaceChildren();for(const item of items){const li=document.createElement('li'),name=document.createElement('strong'),short=document.createElement('span'),status=document.createElement('span'),details=document.createElement('details'),summary=document.createElement('summary'),question=document.createElement('p');li.dataset.role=item.role;if(item.role===role){li.classList.add('current-role');li.setAttribute('aria-current','step');}name.className='role-long';name.textContent=item.name;short.className='role-short';short.textContent={researcher:'Researcher',steward:'Steward',privacy:'Privacy',community:'Community',curator:'Curator'}[item.role];short.setAttribute('aria-hidden','true');status.textContent=item.role===role?`Current role · ${item.status}`:item.status==='not in this practice route'?'outside route':item.status;status.className='role-status';summary.textContent='Question';question.textContent=item.question;details.append(summary,question);li.append(name,short,status,details);root.append(li);}};
@@ -15,9 +19,13 @@ const gated=(parent,label,controls,handler)=>{const b=button(parent,label,handle
 for(const [id,c] of Object.entries(scenarios)){const b=button($('projects'),`${c.title}\n${c.card}`,()=>{state=fresh(id);role='researcher';manualSwitch=false;$('role').value=role;render();$('project-title').focus();},'project');b.dataset.id=id;}
 for(const [id,name] of Object.entries(roles))$('role').append(new Option(name,id));
 $('role').addEventListener('change',event=>{role=event.target.value;manualSwitch=true;render();$('step').focus();});
-$('reset').addEventListener('click',()=>{state=fresh(state.id);role='researcher';manualSwitch=false;$('role').value=role;render();$('project-title').focus();});
+$('reset').addEventListener('click',()=>{state=fresh(state.id);role='researcher';manualSwitch=false;$('role').value=role;materialPanel.reset();render();$('project-title').focus();});
 function render(){
  const c=scenarios[state.id],d=draft(state),a=$('action');a.replaceChildren();
+ materialPanel.render();set('download-feedback','');
+ const ended=['hold','pending','done'].includes(state.phase);
+ const completed=[Boolean(state.materialAnswer?.correct),Boolean(state.progress),Boolean(state.reference),ended].filter(Boolean).length;
+ set('learning-progress',`${completed} of 4 learning tasks complete. ${ended&&state.materialAnswer?.correct?'Learning complete. The external hold or unanswered decision remains; read the debrief and take your handover draft.':`Current goal: ${!state.materialAnswer?.correct?'inspect the small files and record what the next person needs.':!state.progress?'choose a safe response to the project question.':!state.reference?'explain the proposed change for the steward.':'record each colleague’s reply and the next outside task.'}`}`);
  if(catalog){
   renderPolicyContext($('policy-context'),catalog,state.id);
   const references=$('decision-policy');references.replaceChildren();
@@ -33,7 +41,7 @@ function render(){
  for(const b of document.querySelectorAll('.project'))b.setAttribute('aria-pressed',String(b.dataset.id===state.id));
  set('discipline',`${c.discipline} · ${c.group} · ${c.person}`);set('project-title',c.title);set('arrival',c.arrival);
  set('files',c.files);set('sample',c.sample);$('sample').hidden=state.phase==='choice';
- $('versions').hidden=['choice','feedback'].includes(state.phase);set('versions',`Earlier copy: ${c.from}. Proposed copy: ${c.to}. Invented labels, not files in this page.`);
+ $('versions').hidden=['choice','feedback'].includes(state.phase);set('versions',`Earlier copy: ${c.from}. Proposed copy: ${c.to}. These describe the fictional project, not supplied research payloads. Inspect the small teaching files separately below.`);
  set('project-question',c.question);set('feedback',state.phase==='feedback'?state.feedback:state.lastOutcome||'');set('result','');
  $('support').hidden=state.phase==='choice';$('package-details').hidden=['choice','feedback','record'].includes(state.phase);$('handover').hidden=['choice','feedback','record'].includes(state.phase);$('history-section').hidden=!state.events.length;
  set('supplied',state.choice?`Researcher selected: ${c.choices.find(x=>x.id===state.choice).label}. `:'Choose what you would do first.');renderRecord(d.sections);set('handoff',d.handoff);
