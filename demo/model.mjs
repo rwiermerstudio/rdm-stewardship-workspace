@@ -2,7 +2,7 @@ import {scenarios,roles} from './scenarios.mjs';
 export {scenarios,roles};
 export function fresh(id='oral-heritage'){
  if(!scenarios[id])throw Error('Unknown project');
- return {id,phase:'choice',choice:null,feedback:'',progress:false,reference:'',plan:scenarios[id].safePlans[0].id,packagePlan:scenarios[id].packagePlans[0].id,reviews:{},receipt:null,events:[],publicMetadata:false,accessGranted:false};
+ return {id,phase:'choice',choice:null,feedback:'',progress:false,reference:'',plan:scenarios[id].safePlans[0].id,packagePlan:scenarios[id].packagePlans[0].id,reviews:{},revisedRoles:{},packageRepaired:false,receipt:null,events:[],publicMetadata:false,accessGranted:false};
 }
 export function nextRole(s){return scenarios[s.id].reviewers.find(r=>!s.reviews[r])||null;}
 function safeReference(value,previous=''){
@@ -27,6 +27,7 @@ export function transition(current,a){
  }else if(a.type==='review'){
   if(s.phase!=='review'||a.role!==nextRole(s))throw Error('This is not the next independent review');
   if(a.decision==='return'){
+   if(s.revisedRoles[a.role])throw Error('This practice correction was already practiced; record the remaining check without claiming it was verified');
    const missing=c.reviewOptions[a.role].find(o=>o.id===a.reason);
    if(!missing||missing.id!==`${a.role}-evidence`)throw Error('Choose the missing check before returning the question');
    s.reviews[a.role]={decision:'return',reason:missing.id};s.phase='returned';
@@ -51,17 +52,18 @@ export function transition(current,a){
   const plan=c.revisionPlans[returned];if(!plan||a.plan!==plan.id||s.plan===plan.id)throw Error('Choose the correction for this reviewer’s missing check');
   const reference=safeReference(a.reference,s.reference);
   delete s.reviews[returned];
+  s.revisedRoles[returned]=true;
   s.plan=plan.id;s.reference=reference;s.phase='review';note('Researcher',`${plan.label}; new invented reference ${reference}. Evidence still needs checking.`);
  }else if(a.type==='receipt'){
   if(s.phase!=='curator'||a.role!=='curator'||nextRole(s))throw Error('No curator action possible');
-  if(a.decision==='return'){s.receipt='return';s.phase='repair';note('Curator','Returned the draft package for a changed inventory and reference');}
+  if(a.decision==='return'){if(s.packageRepaired)throw Error('This package correction was already practiced; record outstanding checks instead');s.receipt='return';s.phase='repair';note('Curator','Returned the draft package for a changed inventory and reference');}
   else if(a.decision==='noted'&&c.curatorReasons.some(r=>r.id===a.reason)){
    s.receipt={decision:'noted',reason:a.reason};s.phase='done';note('Curator',c.curatorReasons.find(r=>r.id===a.reason).label);
   }else throw Error('Select a case-specific package observation');
  }else if(a.type==='repair'){
   if(s.phase!=='repair')throw Error('No package returned');
   const plan=c.packagePlans.find(p=>p.id===a.plan&&p.id!==s.packagePlan);if(!plan)throw Error('Choose a changed package plan');
-  const reference=safeReference(a.reference,s.reference);s.packagePlan=plan.id;s.reference=reference;s.phase='curator';s.receipt=null;
+  const reference=safeReference(a.reference,s.reference);s.packagePlan=plan.id;s.packageRepaired=true;s.reference=reference;s.phase='curator';s.receipt=null;
   note('Researcher',`Revised package: ${plan.label}; new invented reference ${reference}`);
  }else throw Error('Unknown action');
  return s;

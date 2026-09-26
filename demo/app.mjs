@@ -3,6 +3,7 @@ let state=fresh(),role='researcher';
 const $=id=>document.getElementById(id);
 const set=(id,value)=>{$(id).textContent=value;};
 const button=(parent,label,handler,css='')=>{const el=document.createElement('button');el.type='button';el.textContent=label;el.className=css;el.addEventListener('click',handler);parent.append(el);return el;};
+const paragraph=(parent,text)=>{const el=document.createElement('p');el.textContent=text;parent.append(el);};
 const action=a=>{try{state=transition(state,a);render();$('step').focus();}catch(error){set('feedback',error.message);}};
 const field=(parent,id,label,placeholder='fictional-run-2')=>{const lab=document.createElement('label');lab.htmlFor=id;lab.textContent=label;parent.append(lab);const input=document.createElement('input');input.id=id;input.maxLength=80;input.placeholder=placeholder;parent.append(input);return input;};
 const select=(parent,id,label,options,placeholder)=>{const lab=document.createElement('label');lab.htmlFor=id;lab.textContent=label;parent.append(lab);const control=document.createElement('select');control.id=id;control.append(new Option(placeholder,''));for(const o of options)control.append(new Option(o.label,o.id));parent.append(control);return control;};
@@ -49,9 +50,13 @@ function render(){
     metadata=select(a,'metadata','Description visibility',[{id:'private',label:'Keep private'},{id:'review-needed',label:'Request separate visibility decision'}],'Choose description status');
     access=select(a,'access','File requests',[{id:'none',label:'No request route yet'},{id:'request-review',label:'Requests need separate decision'}],'Choose file request status');
    }
-   const returnButton=gated(a,'Ask researcher for this missing check',[response],()=>action({type:'review',role,decision:'return',reason:response.value}));
-   const updateReturn=()=>returnButton.disabled=response.value!==`${role}-evidence`;
-   response.addEventListener('input',updateReturn);updateReturn();
+   if(state.revisedRoles[role]){
+    paragraph(a,'You have practiced returning this question once. Record what remains unverified; a real reviewer would continue outside this exercise.');
+   }else{
+    const returnButton=gated(a,'Ask researcher for this missing check',[response],()=>action({type:'review',role,decision:'return',reason:response.value}));
+    const updateReturn=()=>returnButton.disabled=response.value!==`${role}-evidence`;
+    response.addEventListener('input',updateReturn);updateReturn();
+   }
    gated(a,'Record this training response',[response,...(metadata?[metadata,access]:[])],()=>{const option=c.reviewOptions[role].find(o=>o.id===response.value);action({type:'review',role,decision:option.decision,reason:option.id,metadata:metadata?.value,access:access?.value});});
   }
  }else if(state.phase==='returned'){
@@ -59,7 +64,7 @@ function render(){
   if(researcher){const returned=Object.keys(state.reviews).find(r=>state.reviews[r].decision==='return');const input=field(a,'new-reference','New invented reference for the proposed correction');const plan=select(a,'changed-plan','What will you propose to change?',c.revisionChoices[returned],'Choose a response to this reviewer’s question');gated(a,'Send proposed correction',[input,plan],()=>action({type:'revise',reference:input.value,plan:plan.value}));}
  }else if(state.phase==='curator'){
   set('step','5 · Package question');set('role-context',`${c.candidate} is a candidate only. The curator has not inspected actual files, capacity or integrity.`);
-  if(role==='curator'){const reason=select(a,'curator-reason','Package observation and reason',c.curatorReasons,'Choose what remains to be checked');button(a,'Return package for correction',()=>action({type:'receipt',role,decision:'return'}));gated(a,'Record package observation',[reason],()=>action({type:'receipt',role,decision:'noted',reason:reason.value}));}
+  if(role==='curator'){const reason=select(a,'curator-reason','Package observation and reason',c.curatorReasons,'Choose what remains to be checked');if(!state.packageRepaired)button(a,'Return package for correction',()=>action({type:'receipt',role,decision:'return'}));else paragraph(a,'You have practiced one package return. Record remaining checks; real acceptance needs an actual curator.');gated(a,'Record package observation',[reason],()=>action({type:'receipt',role,decision:'noted',reason:reason.value}));}
  }else if(state.phase==='repair'){
   set('step','5 · Package returned');set('role-context','Change the proposed inventory plan and reference before asking the curator again.');
   if(researcher){const input=field(a,'new-reference','New invented reference');const plan=select(a,'package-plan','Changed package plan',c.packagePlans.filter(p=>p.id!==state.packagePlan),'Choose a changed package plan');gated(a,'Send revised package',[input,plan],()=>action({type:'repair',reference:input.value,plan:plan.value}));}

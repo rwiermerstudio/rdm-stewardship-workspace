@@ -24,6 +24,16 @@ test('returned question cannot be reopened without changed safe plan and referen
  s=act(s,'revise',{reference:'fictional-run-2',plan:scenarios[s.id].safePlans[1].id});
  assert.equal(s.phase,'review');assert.match(draft(s).record,/fictional-run-2/);assert.match(draft(s).record,/correction log/i);assert.equal(nextRole(s),'steward');
 });
+test('a second return cannot strand reviewer or curator after the only practice correction',()=>{
+ let s=prepared('oral-heritage');s=act(s,'review',{role:'steward',decision:'return',reason:'steward-evidence'});
+ s=act(s,'revise',{reference:'fictional-run-2',plan:'fix-steward'});
+ assert.throws(()=>act(s,'review',{role:'steward',decision:'return',reason:'steward-evidence'}),/already practiced/i);
+ s=answer(s,'steward');assert.equal(nextRole(s),'privacy');
+ let sky=prepared('stellar-survey');sky=answer(sky,'steward');sky=act(sky,'receipt',{role:'curator',decision:'return'});
+ sky=act(sky,'repair',{reference:'fictional-run-2',plan:'inventory-revised'});
+ assert.throws(()=>act(sky,'receipt',{role:'curator',decision:'return'}),/already practiced/i);
+ sky=act(sky,'receipt',{role:'curator',decision:'noted',reason:'capacity-pending'});assert.equal(sky.phase,'done');
+});
 test('curator return requires changed package plan and reference before new receipt',()=>{
  let s=prepared('stellar-survey');s=answer(s,'steward');s=act(s,'receipt',{role:'curator',decision:'return'});
  assert.throws(()=>act(s,'repair'));assert.throws(()=>act(s,'repair',{reference:'fictional-run-1',plan:scenarios[s.id].packagePlans[1].id}));
