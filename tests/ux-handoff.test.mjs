@@ -22,6 +22,22 @@ test('returns go to researcher and repaired questions go back to owner',()=>{
  let sky=prepared('stellar-survey');sky=review(sky,'steward');sky=send(sky,'receipt',{role:'curator',decision:'return'});assert.equal(actionOwner(sky),'researcher');
  sky=send(sky,'repair',{plan:'inventory-revised'});assert.equal(actionOwner(sky),'curator');sky=send(sky,'receipt',{role:'curator',decision:'noted',reason:'capacity-pending'});assert.equal(actionOwner(sky),null);
 });
+test('returned reviewer and curator choices show concrete sample text in the draft',()=>{
+ for(const [id,c] of Object.entries(scenarios))for(const r of c.reviewers){
+  const example=c.revisionPlans[r].label;
+  assert.match(example,/EXAMPLE/,`${id}/${r} needs a fictional sample`);
+  assert.ok(example.length>110,`${id}/${r} needs a concrete correction`);
+  let s=prepared(id);for(const earlier of c.reviewers.slice(0,c.reviewers.indexOf(r)))s=review(s,earlier);
+  s=send(s,'review',{role:r,decision:'return',reason:`${r}-evidence`});
+  s=send(s,'revise',{plan:`fix-${r}`});
+  assert.ok(draft(s).record.includes(example),`${id}/${r} sample must survive in record`);
+ }
+ let sky=prepared('stellar-survey');sky=review(sky,'steward');sky=send(sky,'receipt',{role:'curator',decision:'return'});
+ sky=send(sky,'repair',{plan:'inventory-revised'});
+ assert.match(scenarios['stellar-survey'].packagePlans[1].label,/EXAMPLE/);
+ assert.match(draft(sky).handoff,/EXAMPLE/);
+});
+
 test('every one of 18 choices has a safe concrete fictional action visible in its draft',()=>{
  let count=0;
  for(const [id,c] of Object.entries(scenarios))for(const option of c.choices){

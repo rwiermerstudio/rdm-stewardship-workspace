@@ -108,6 +108,25 @@ const blockedCorrections={
  'variant-study':{vault:'Cannot advance: storage security cannot grant reuse authority. Pause the job and refer consent and purpose to the project consent owner and privacy specialist.',public:'Cannot advance: derived variants may still be sensitive and consent is unknown. Pause sharing and refer the intended use to the consent owner.'},
  'brain-maps':{done:'Cannot advance: defacing is not a human check of images or companion fields. Request trained image and privacy inspection before transfer.',sidecar:'Cannot advance: deleting all companion files loses method context without assessing residual risk. Retain them restricted and request human inspection.'}
 };
+const revisionExamples={
+ 'oral-heritage':{
+  steward:'Fictional method note: "Link transcript-EXAMPLE.txt to clip-EXAMPLE.wav and correction-log-EXAMPLE.txt; inspect the log outside this exercise."',
+  privacy:'Fictional proposed-use note: "Limit EXAMPLE recordings to the named study team examining this collection. Keep title and audio private; ask the consent owner whether that exact study fits the signed terms."',
+  community:'Fictional request: "Keep EXAMPLE title private. Ask the appointed community body separately whether the title may be found and who may request audio."'},
+ 'stellar-survey':{steward:'Fictional method note: "Identify pipeline-run-EXAMPLE.txt and calibration-EXAMPLE.txt as proposed inputs for sky-calibrated-v2; inspect both logs before treating the link as verified."'},
+ 'neighbourhood-voices':{
+  steward:'Fictional method note: "Keep guide-EXAMPLE.csv with coded-table-EXAMPLE.csv and link both to restricted interviews-v1; verify the real guide version later."',
+  privacy:'Fictional proposed-use note: "Only the named study team may propose secondary analysis of neighbourhood change using coded-table-EXAMPLE.csv. Keep it private until the consent owner checks that purpose against signed agreements."'},
+ 'coastal-species':{
+  steward:'Fictional method note: "Describe how restricted-EXAMPLE.csv would become area-EXAMPLE.csv without including any real coordinates or sites."',
+  privacy:'Fictional review request: "Send the private preview-EXAMPLE.tiff and draft caption to an independent location-risk specialist through an approved route; publish neither here."'},
+ 'variant-study':{
+  steward:'Fictional run specification: "Propose run-EXAMPLE.txt as the method for sequence-v1 to variant-calls-v2, but do not process reads-EXAMPLE.fastq while consent is unknown."',
+  privacy:'Fictional purpose request: "Ask the consent owner if the proposed variant analysis of EXAMPLE sequence collection is within the signed purpose; do not run or share files before that determination."'},
+ 'brain-maps':{
+  steward:'Fictional inventory: "List scan-EXAMPLE.nii with scan-EXAMPLE.json and the proposed defacing-run-EXAMPLE.txt; inspect the actual run and files later."',
+  privacy:'Fictional inspection request: "Have a trained reviewer inspect scan-EXAMPLE.nii and the privacy office inspect scan-EXAMPLE.json fields and intended use before any transfer."'}
+};
 for(const [id,options] of Object.entries(tradeoffs))for(const option of scenarios[id].choices){
  const [gain,cost,unknown]=options[option.id];Object.assign(option,{gain,cost,unknown});
  option.example=examples[id][option.id];option.blockedReason=blockedCorrections[id][option.id]||'';
@@ -140,13 +159,13 @@ for(const [id,lesson] of Object.entries(lessons)){
   'variant-study':{steward:'Specify the proposed processing run while the data stays on hold',privacy:'Send the proposed purpose to the consent owner before any reuse'},
   'brain-maps':{steward:'Link the image-processing run and its companion-file list',privacy:'Request inspection of the actual images and companion fields'}
  };
- c.revisionPlans=Object.fromEntries(Object.entries(corrections[id]).map(([r,label])=>[r,{id:`fix-${r}`,label:`Proposed correction: ${label}`}]));
+ c.revisionPlans=Object.fromEntries(Object.entries(corrections[id]).map(([r,label])=>[r,{id:`fix-${r}`,label:`Proposed correction: ${label}. Example: ${revisionExamples[id][r]}`}]));
  c.revisionChoices=Object.fromEntries(Object.entries(c.revisionPlans).map(([r,plan])=>[r,[
   {id:plan.id,label:plan.label,sufficient:true},
   {id:`shortcut-${r}`,label:inadequateCorrections[id][r][0],sufficient:false,feedback:inadequateCorrections[id][r][1]}
  ]]));
  c.safePlans=[{id:'private-review',label:'Keep the proposed copy private and request the named checks'},...Object.values(c.revisionPlans)];
- c.packagePlans=[{id:'inventory-pending',label:'Draft inventory only; checks outstanding'}, {id:'inventory-revised',label:'Revised inventory includes run link and requests capacity and integrity checks'}];
+ c.packagePlans=[{id:'inventory-pending',label:'Draft inventory only; checks outstanding'}, {id:'inventory-revised',label:'Revised inventory draft: list tile-EXAMPLE.fits, tile-EXAMPLE.zarr and pipeline-run-EXAMPLE.txt together. Ask the curator to check actual capacity, file list and integrity before any transfer; none was checked here.'}];
  c.reviewOptions={};for(const r of c.reviewers){
   const statements=lesson[r];c.reviewOptions[r]=[{id:`${r}-scope`,decision:r==='steward'?'noted':'needs-more',label:statements[0]}, {id:`${r}-evidence`,decision:'needs-more',label:statements[1]}];
  }

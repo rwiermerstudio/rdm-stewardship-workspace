@@ -28,3 +28,12 @@
 .task[data-current-role] #role-context{border-inline-start:4px solid var(--role-accent);padding-inline-start:.7rem}
 #process-view[data-current-role]{border-top:4px solid var(--role-accent)}
 @media(max-width:760px){#role-lanes .current-role{outline-width:3px}#role-lanes .current-role .role-status{font-size:.7rem}}
+.role-short{display:none}
+/* A short viewport needs the entire map and the action below it, not a tall overlay. */
+@media(max-width:360px){
+ #process-view{padding:.35rem .45rem}#process-view h2{font-size:.95rem;margin-bottom:.2rem}
+ #process-steps,#role-lanes{gap:.18rem;margin:.15rem 0}#process-steps{grid-template-columns:repeat(2,minmax(0,1fr))}#process-steps li{padding:.12rem;font-size:.68rem;line-height:1.2}
+ #role-lanes li{padding:.15rem .2rem;font-size:.7rem;line-height:1.18}#role-lanes .role-long{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}
+ #role-lanes .role-short{display:block;font-weight:700}#role-lanes .role-status,#role-lanes .current-role .role-status{font-size:.62rem}
+ #role-lanes summary{font-size:.64rem}#step,[tabindex="-1"]{scroll-margin-top:240px}
+}

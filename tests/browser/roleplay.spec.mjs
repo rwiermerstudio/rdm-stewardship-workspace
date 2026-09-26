@@ -122,6 +122,35 @@ test('all role accents differ and manual switching updates map and task',async({
  }
  expect(new Set(accents).size).toBe(5);
 });
+test('a narrow phone keeps the handoff task visible and choices clickable',async({page})=>{
+ await page.setViewportSize({width:320,height:568});await page.goto('/');
+ await page.locator('[data-choice="ask"]').click({timeout:3000});
+ await page.getByRole('button',{name:'Continue to the change record'}).click({timeout:3000});
+ await page.getByRole('button',{name:'Make draft and ask reviewers'}).click({timeout:3000});
+ await expect(page.locator('#role')).toHaveValue('steward');
+ const bounds=await page.evaluate(()=>({map:document.querySelector('#process-view').getBoundingClientRect(),step:document.querySelector('#step').getBoundingClientRect(),stages:document.querySelector('#process-steps').getBoundingClientRect(),roles:document.querySelector('#role-lanes').getBoundingClientRect()}));
+ expect(bounds.stages.top).toBeGreaterThanOrEqual(0);expect(bounds.roles.bottom).toBeLessThanOrEqual(568);
+ expect(bounds.step.top).toBeGreaterThanOrEqual(bounds.map.bottom);expect(bounds.step.bottom).toBeLessThanOrEqual(568);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1)).toBe(false);
+ await expect(page.getByLabel('What can you say from this draft?')).toBeVisible();
+});
+
+test('a returned intended-use and package decision contains concrete proposed text',async({page})=>{
+ await page.goto('/');await prepare(page,'oral-heritage','ask');await review(page,'steward');
+ await page.getByLabel('What can you say from this draft?').selectOption('privacy-evidence');
+ await page.getByRole('button',{name:'Ask researcher for this missing check'}).click();
+ await expect(page.getByLabel('What will you propose to change?')).toContainText('EXAMPLE');
+ await page.getByLabel('What will you propose to change?').selectOption('fix-privacy');
+ await page.getByRole('button',{name:'Send proposed correction'}).click();
+ await expect(page.locator('#record')).toContainText('EXAMPLE');
+ await page.getByRole('button',{name:'Reset this project'}).click();await prepare(page,'stellar-survey','run');await review(page,'steward');
+ await page.getByRole('button',{name:'Return package for correction'}).click();
+ await expect(page.getByLabel('Changed package plan')).toContainText('EXAMPLE');
+ await page.getByLabel('Changed package plan').selectOption('inventory-revised');
+ await page.getByRole('button',{name:'Send revised package'}).click();
+ await expect(page.locator('#handoff')).toContainText('EXAMPLE');
+});
+
 test('all twelve blocked choices state why and what to do instead',async({page})=>{
  await page.goto('/');
  for(const [id,choices] of [
