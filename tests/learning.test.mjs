@@ -17,12 +17,12 @@ for(const [id,c] of Object.entries(scenarios))test(`${id}: risky decision change
  else {assert.equal(s.phase,'pending');assert.match(draft(s).handoff,/still needs|unresolved/i);assert.throws(()=>act(s,'receipt',{role:'curator',decision:'ready'}));}
 });
 test('returned question cannot be reopened without changed safe plan and reference',()=>{
- let s=prepared('oral-heritage');s=act(s,'review',{role:'steward',decision:'return'});
+ let s=prepared('oral-heritage');s=act(s,'review',{role:'steward',decision:'return',reason:'steward-evidence'});
  assert.throws(()=>act(s,'revise'));
  assert.throws(()=>act(s,'revise',{reference:'fictional-run-1',plan:scenarios[s.id].safePlans[1].id}));
  assert.throws(()=>act(s,'revise',{reference:'fictional-run-2',plan:'publish'}));
  s=act(s,'revise',{reference:'fictional-run-2',plan:scenarios[s.id].safePlans[1].id});
- assert.equal(s.phase,'review');assert.match(draft(s).record,/fictional-run-2/);assert.match(draft(s).record,/revised/i);assert.equal(nextRole(s),'steward');
+ assert.equal(s.phase,'review');assert.match(draft(s).record,/fictional-run-2/);assert.match(draft(s).record,/correction log/i);assert.equal(nextRole(s),'steward');
 });
 test('curator return requires changed package plan and reference before new receipt',()=>{
  let s=prepared('stellar-survey');s=answer(s,'steward');s=act(s,'receipt',{role:'curator',decision:'return'});
@@ -31,6 +31,30 @@ test('curator return requires changed package plan and reference before new rece
  assert.equal(s.phase,'curator');assert.match(draft(s).handoff,/fictional-run-2/);assert.match(draft(s).handoff,/revised/i);
  s=act(s,'receipt',{role:'curator',decision:'noted',reason:scenarios[s.id].curatorReasons[0].id});
  assert.equal(s.phase,'done');assert.match(draft(s).handoff,/capacity|integrity/i);
+});
+test('choice positions vary and every project includes a recoverable risky option',()=>{
+ const positions=Object.values(scenarios).map(c=>c.choices.findIndex(o=>o.good));
+ assert.ok(new Set(positions).size>=3,`sound choices always in same slot: ${positions}`);
+ for(const c of Object.values(scenarios))assert.ok(c.choices.some(o=>!o.good));
+});
+test('return specifies the missing check and requires a case-specific correction',()=>{
+ let s=prepared('oral-heritage');
+ assert.throws(()=>act(s,'review',{role:'steward',decision:'return'}));
+ s=act(s,'review',{role:'steward',decision:'return',reason:'steward-evidence'});
+ assert.match(draft(s).record,/correction log/i);
+ assert.throws(()=>act(s,'revise',{reference:'fictional-run-2',plan:'narrowed-review'}));
+ const correction=scenarios[s.id].revisionPlans.steward;
+ s=act(s,'revise',{reference:'fictional-run-2',plan:correction.id});
+ assert.match(draft(s).record,/correction log/i);
+});
+test('different reviewer reasons change the visible explanation without clearing authority',()=>{
+ const c=scenarios['oral-heritage'];let s=prepared(c.id);
+ s=act(s,'review',{role:'steward',decision:'noted',reason:'steward-scope'});
+ const first=act(s,'review',{role:'privacy',decision:'needs-more',reason:'privacy-scope'});
+ const second=act(s,'review',{role:'privacy',decision:'needs-more',reason:'privacy-evidence'});
+ assert.notEqual(draft(first).record,draft(second).record);
+ assert.match(draft(first).record,/consent/i);
+ assert.equal(first.accessGranted,false);
 });
 test('first-sight material describes formats and quantities in ordinary language',()=>{
  for(const c of Object.values(scenarios)){

@@ -43,18 +43,18 @@ function render(){
  }else if(state.phase==='review'){
   set('step','4 · Independent questions');set('role-context',`Next reviewer: ${roles[reviewer]}. ${c.reviewQuestions[reviewer]}`);
   if(role===reviewer){
-   const response=select(a,'review-reason','Determination and reason',c.reviewOptions[role],'Choose a reason and what remains unknown');
+   const response=select(a,'review-reason','What can you say from this draft?',c.reviewOptions[role],'Choose what is still missing');
    let metadata,access;
    if(role==='community'){
     metadata=select(a,'metadata','Description visibility',[{id:'private',label:'Keep private'},{id:'review-needed',label:'Request separate visibility decision'}],'Choose description status');
     access=select(a,'access','File requests',[{id:'none',label:'No request route yet'},{id:'request-review',label:'Requests need separate decision'}],'Choose file request status');
    }
-   button(a,'Return this question',()=>action({type:'review',role,decision:'return'}));
+   gated(a,'Ask researcher for this missing check',[response],()=>action({type:'review',role,decision:'return',reason:response.value}));
    gated(a,'Record this training response',[response,...(metadata?[metadata,access]:[])],()=>{const option=c.reviewOptions[role].find(o=>o.id===response.value);action({type:'review',role,decision:option.decision,reason:option.id,metadata:metadata?.value,access:access?.value});});
   }
  }else if(state.phase==='returned'){
   set('step','4 · A question came back');set('role-context','Change the private plan and invented reference before the reviewer answers again. A returned question is not resolved by a click.');
-  if(researcher){const input=field(a,'new-reference','New invented reference');const plan=select(a,'changed-plan','Changed private plan',c.safePlans.filter(p=>p.id!==state.plan),'Choose a changed safe plan');gated(a,'Send revised plan',[input,plan],()=>action({type:'revise',reference:input.value,plan:plan.value}));}
+  if(researcher){const returned=Object.keys(state.reviews).find(r=>state.reviews[r].decision==='return');const input=field(a,'new-reference','New invented reference for the proposed correction');const plan=select(a,'changed-plan','What will you propose to change?',[c.revisionPlans[returned]],'Choose a response to this reviewer’s question');gated(a,'Send proposed correction',[input,plan],()=>action({type:'revise',reference:input.value,plan:plan.value}));}
  }else if(state.phase==='curator'){
   set('step','5 · Package question');set('role-context',`${c.candidate} is a candidate only. The curator has not inspected actual files, capacity or integrity.`);
   if(role==='curator'){const reason=select(a,'curator-reason','Package observation and reason',c.curatorReasons,'Choose what remains to be checked');button(a,'Return package for correction',()=>action({type:'receipt',role,decision:'return'}));gated(a,'Record package observation',[reason],()=>action({type:'receipt',role,decision:'noted',reason:reason.value}));}

@@ -3,7 +3,7 @@ import AxeBuilder from '@axe-core/playwright';
 const role=(page,value)=>page.getByLabel('Acting as').selectOption(value);
 const choose=(page,id)=>page.locator(`[data-choice="${id}"]`).click();
 async function prepare(page,id,choice){await page.locator(`.project[data-id="${id}"]`).click();await choose(page,choice);await page.getByRole('button',{name:'Continue to the change record'}).click();await page.getByLabel('Invented method or evidence reference').fill('fictional-run-1');await page.getByRole('button',{name:'Make draft and ask reviewers'}).click();}
-async function review(page,r){await role(page,r);await page.getByLabel('Determination and reason').selectOption(`${r}-scope`);if(r==='community'){await page.getByLabel('Description visibility').selectOption('private');await page.getByLabel('File requests').selectOption('none');}await page.getByRole('button',{name:'Record this training response'}).click();}
+async function review(page,r){await role(page,r);await page.getByLabel('What can you say from this draft?').selectOption(`${r}-scope`);if(r==='community'){await page.getByLabel('Description visibility').selectOption('private');await page.getByLabel('File requests').selectOption('none');}await page.getByRole('button',{name:'Record this training response'}).click();}
 for(const [id,bad,good,reviewers,outcome] of [
  ['oral-heritage','publish','ask',['steward','privacy','community'],'pending'],
  ['stellar-survey','copy','run',['steward'],'curator'],
@@ -31,10 +31,10 @@ for(const [id,bad,good,reviewers,outcome] of [
  }
 });
 test('review return and package repair require visible changed plans',async({page})=>{
- await page.goto('/');await prepare(page,'stellar-survey','run');await role(page,'steward');await page.getByRole('button',{name:'Return this question'}).click();
- await role(page,'researcher');await expect(page.getByRole('button',{name:'Send revised plan'})).toBeDisabled();
- await page.getByLabel('New invented reference').fill('fictional-run-2');await page.getByLabel('Changed private plan').selectOption('narrowed-review');await page.getByRole('button',{name:'Send revised plan'}).click();
- await expect(page.locator('#record')).toContainText('Revised private plan');await review(page,'steward');await role(page,'curator');await page.getByRole('button',{name:'Return package for correction'}).click();
+ await page.goto('/');await prepare(page,'stellar-survey','run');await role(page,'steward');await page.getByLabel('What can you say from this draft?').selectOption('steward-evidence');await page.getByRole('button',{name:'Ask researcher for this missing check'}).click();
+ await role(page,'researcher');await expect(page.getByRole('button',{name:'Send proposed correction'})).toBeDisabled();
+ await page.getByLabel('New invented reference for the proposed correction').fill('fictional-run-2');await page.getByLabel('What will you propose to change?').selectOption('fix-steward');await page.getByRole('button',{name:'Send proposed correction'}).click();
+ await expect(page.locator('#record')).toContainText('calibration inputs');await review(page,'steward');await role(page,'curator');await page.getByRole('button',{name:'Return package for correction'}).click();
  await role(page,'researcher');await expect(page.getByRole('button',{name:'Send revised package'})).toBeDisabled();await page.getByLabel('New invented reference').fill('fictional-run-3');await page.getByLabel('Changed package plan').selectOption('inventory-revised');await page.getByRole('button',{name:'Send revised package'}).click();
  await expect(page.locator('#handoff')).toContainText('Revised inventory');await role(page,'curator');await page.getByLabel('Package observation and reason').selectOption('capacity-pending');await page.getByRole('button',{name:'Record package observation'}).click();await expect(page.locator('#result')).toContainText('still needs');
 });

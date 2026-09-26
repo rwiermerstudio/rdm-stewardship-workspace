@@ -50,10 +50,21 @@ for(const [id,lesson] of Object.entries(lessons)){
  const c=scenarios[id];c.card=lesson.card;c.external=lesson.external;
  c.choices.filter(o=>!o.good).forEach((o,i)=>o.consequence=lesson.risk[i]);
  c.choices.find(o=>o.good).consequence='The draft keeps the proposed action private and routes the unresolved question to the named reviewers.';
- c.safePlans=[{id:'private-review',label:'Keep the proposed copy private and request the named checks'}, {id:'narrowed-review',label:'Revised private plan: document the method and request the missing evidence before any use'}];
+ const corrections={
+  'oral-heritage':{steward:'Ask for the correction log and link this transcript version to its recording',privacy:'Narrow the proposed use and ask for the actual consent terms',community:'Keep the title private and ask the appointed community body about discovery and requests'},
+  'stellar-survey':{steward:'Link the actual processing run and calibration inputs to these image versions'},
+  'neighbourhood-voices':{steward:'Find the coding guide version and its link to the original interviews',privacy:'Specify the intended coded-table use and request the consent agreements'},
+  'coastal-species':{steward:'Record how the restricted sites became map areas without including coordinates',privacy:'Request an outside assessment of both the map and its description'},
+  'variant-study':{steward:'Specify the proposed processing run while the data stays on hold',privacy:'Send the proposed purpose to the consent owner before any reuse'},
+  'brain-maps':{steward:'Link the image-processing run and its companion-file list',privacy:'Request inspection of the actual images and companion fields'}
+ };
+ c.revisionPlans=Object.fromEntries(Object.entries(corrections[id]).map(([r,label])=>[r,{id:`fix-${r}`,label:`Proposed correction: ${label}`}]));
+ c.safePlans=[{id:'private-review',label:'Keep the proposed copy private and request the named checks'},...Object.values(c.revisionPlans)];
  c.packagePlans=[{id:'inventory-pending',label:'Draft inventory only; checks outstanding'}, {id:'inventory-revised',label:'Revised inventory includes run link and requests capacity and integrity checks'}];
  c.reviewOptions={};for(const r of c.reviewers){
   const statements=lesson[r];c.reviewOptions[r]=[{id:`${r}-scope`,decision:r==='steward'?'noted':'needs-more',label:statements[0]}, {id:`${r}-evidence`,decision:'needs-more',label:statements[1]}];
  }
  c.curatorReasons=[{id:'capacity-pending',label:'Draft package recorded; actual capacity, file list and integrity still need checking.'}];
+ const soundPosition={'oral-heritage':0,'stellar-survey':1,'neighbourhood-voices':2,'coastal-species':1,'variant-study':0,'brain-maps':2}[id];
+ const sound=c.choices.splice(c.choices.findIndex(o=>o.good),1)[0];c.choices.splice(soundPosition,0,sound);
 }

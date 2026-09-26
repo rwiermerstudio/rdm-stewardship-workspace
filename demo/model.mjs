@@ -26,7 +26,12 @@ export function transition(current,a){
   s.reference=safeReference(a.reference);s.phase='review';note('Researcher',`Entered an unverified invented reference: ${s.reference}`);
  }else if(a.type==='review'){
   if(s.phase!=='review'||a.role!==nextRole(s))throw Error('This is not the next independent review');
-  if(a.decision==='return'){s.reviews[a.role]={decision:'return'};s.phase='returned';note(roles[a.role],'Returned the plan for a changed private proposal and reference');}
+  if(a.decision==='return'){
+   const missing=c.reviewOptions[a.role].find(o=>o.id===a.reason);
+   if(!missing)throw Error('Choose the missing check before returning the question');
+   s.reviews[a.role]={decision:'return',reason:missing.id};s.phase='returned';
+   note(roles[a.role],`Returned the question: ${missing.label}`);
+  }
   else{
    const option=c.reviewOptions[a.role].find(o=>o.id===a.reason&&o.decision===a.decision);
    if(!option)throw Error('Select a case-specific determination and reason');
@@ -40,10 +45,11 @@ export function transition(current,a){
   }
  }else if(a.type==='revise'){
   if(s.phase!=='returned')throw Error('Only returned questions can be revised');
-  const plan=c.safePlans.find(p=>p.id===a.plan&&p.id!==s.plan);if(!plan)throw Error('Choose a changed safe plan');
+  const returned=Object.keys(s.reviews).find(r=>s.reviews[r].decision==='return');
+  const plan=c.revisionPlans[returned];if(!plan||a.plan!==plan.id||s.plan===plan.id)throw Error('Choose the correction for this reviewer’s missing check');
   const reference=safeReference(a.reference,s.reference);
-  const returned=Object.keys(s.reviews).find(r=>s.reviews[r].decision==='return');delete s.reviews[returned];
-  s.plan=plan.id;s.reference=reference;s.phase='review';note('Researcher',`Revised private plan: ${plan.label}; new invented reference ${reference}`);
+  delete s.reviews[returned];
+  s.plan=plan.id;s.reference=reference;s.phase='review';note('Researcher',`${plan.label}; new invented reference ${reference}. Evidence still needs checking.`);
  }else if(a.type==='receipt'){
   if(s.phase!=='curator'||a.role!=='curator'||nextRole(s))throw Error('No curator action possible');
   if(a.decision==='return'){s.receipt='return';s.phase='repair';note('Curator','Returned the draft package for a changed inventory and reference');}
@@ -61,7 +67,7 @@ export function transition(current,a){
 export function draft(s){
  const c=scenarios[s.id],choice=c.choices.find(o=>o.id===s.choice);
  const plan=c.safePlans.find(p=>p.id===s.plan).label,packagePlan=c.packagePlans.find(p=>p.id===s.packagePlan).label;
- const reviews=Object.entries(s.reviews).map(([r,v])=>`${roles[r]}: ${v.decision==='return'?'returned the plan':c.reviewOptions[r].find(o=>o.id===v.reason)?.label}`).join('\n')||'No reviewer response yet.';
+ const reviews=Object.entries(s.reviews).map(([r,v])=>`${roles[r]}: ${v.decision==='return'?`asked for ${c.reviewOptions[r].find(o=>o.id===v.reason)?.label}`:c.reviewOptions[r].find(o=>o.id===v.reason)?.label}`).join('\n')||'No reviewer response yet.';
  return {record:`Invented catalogue: ${c.from} → ${c.to}.\nProposed action: ${choice?.label||'Choose an action first'}.\n${choice?.consequence||'No draft action yet.'}\n${choice?.good?`Private plan: ${plan}.`:choice?'Draft action not approved; choose another action to replace this proposal.':'No plan yet.'}\nInvented reference: ${s.reference||'Not entered'}.\nTraining responses (not actual inspection or consent):\n${reviews}${s.communityScope?`\nDescription: ${s.communityScope.metadata}; file requests: ${s.communityScope.access}.`:''}`,
  handoff:`Candidate storage only: ${c.candidate}.\n${packagePlan}.\n${c.checklist}\nInvented reference: ${s.reference||'Not entered'}.\nStill needs external checks: ${c.external}${c.hold?`\nHard hold: ${c.hold}`:''}`};
 }
