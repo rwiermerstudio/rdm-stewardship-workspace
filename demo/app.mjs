@@ -1,5 +1,7 @@
 import {fresh,transition,draft,nextRole,actionOwner,processView,scenarios,roles} from './model.mjs';
-let state=fresh(),role='researcher',manualSwitch=false;
+import {renderPolicyContext} from './policy-context.mjs';
+let state=fresh(),role='researcher',manualSwitch=false,catalog=null;
+fetch('meridian-institute.json').then(response=>{if(!response.ok)throw Error(`HTTP ${response.status}`);return response.json();}).then(data=>{catalog=data;renderPolicyContext($('policy-context'),catalog,state.id);}).catch(()=>set('policy-context','The fictional catalogue could not be loaded. Do not use the exercise without its source documents.'));
 const $=id=>document.getElementById(id);
 const set=(id,value)=>{$(id).textContent=value;};
 const button=(parent,label,handler,css='')=>{const el=document.createElement('button');el.type='button';el.textContent=label;el.className=css;el.addEventListener('click',handler);parent.append(el);return el;};
@@ -8,14 +10,15 @@ const action=a=>{try{state=transition(state,a);role=actionOwner(state)||role;man
 const list=(id,items)=>{const root=$(id);root.replaceChildren();for(const text of items){const li=document.createElement('li');li.textContent=text;root.append(li);}};
 const renderRecord=sections=>{const root=$('record');root.replaceChildren();for(const item of sections){const term=document.createElement('dt'),description=document.createElement('dd');term.textContent=item.label;description.textContent=item.text;root.append(term,description);}};
 const renderRoles=items=>{const root=$('role-lanes');root.replaceChildren();for(const item of items){const li=document.createElement('li'),name=document.createElement('strong'),short=document.createElement('span'),status=document.createElement('span'),details=document.createElement('details'),summary=document.createElement('summary'),question=document.createElement('p');li.dataset.role=item.role;if(item.role===role){li.classList.add('current-role');li.setAttribute('aria-current','step');}name.className='role-long';name.textContent=item.name;short.className='role-short';short.textContent={researcher:'Researcher',steward:'Steward',privacy:'Privacy',community:'Community',curator:'Curator'}[item.role];short.setAttribute('aria-hidden','true');status.textContent=item.role===role?`Current role · ${item.status}`:item.status==='not in this practice route'?'outside route':item.status;status.className='role-status';summary.textContent='Question';question.textContent=item.question;details.append(summary,question);li.append(name,short,status,details);root.append(li);}};
-const select=(parent,id,label,options,placeholder)=>{const lab=document.createElement('label');lab.htmlFor=id;lab.textContent=label;parent.append(lab);const control=document.createElement('select');control.id=id;control.append(new Option(placeholder,''));for(const o of options)control.append(new Option(o.label,o.id));parent.append(control);return control;};
-const gated=(parent,label,controls,handler)=>{const b=button(parent,label,handler,'primary');b.disabled=true;const update=()=>b.disabled=controls.some(x=>!x.value);controls.forEach(x=>x.addEventListener('input',update));return b;};
+const cards=(parent,id,title,options)=>{const group=document.createElement('fieldset');group.className='answer-cards';group.id=id;group.append(document.createElement('legend'));group.firstChild.textContent=title;for(const option of options){const label=document.createElement('label');label.className='answer-card';const input=document.createElement('input');input.type='radio';input.name=id;input.value=option.id;const caption=document.createElement('span');caption.textContent=option.label;label.append(input,caption);group.append(label);}parent.append(group);return {get value(){return group.querySelector('input:checked')?.value||'';},addEventListener:(type,handler)=>group.addEventListener(type,handler)};};
+const gated=(parent,label,controls,handler)=>{const b=button(parent,label,handler,'primary');b.disabled=true;const update=()=>b.disabled=controls.some(x=>!x.value);controls.forEach(x=>x.addEventListener('change',update));return b;};
 for(const [id,c] of Object.entries(scenarios)){const b=button($('projects'),`${c.title}\n${c.card}`,()=>{state=fresh(id);role='researcher';manualSwitch=false;$('role').value=role;render();$('project-title').focus();},'project');b.dataset.id=id;}
 for(const [id,name] of Object.entries(roles))$('role').append(new Option(name,id));
 $('role').addEventListener('change',event=>{role=event.target.value;manualSwitch=true;render();$('step').focus();});
 $('reset').addEventListener('click',()=>{state=fresh(state.id);role='researcher';manualSwitch=false;$('role').value=role;render();$('project-title').focus();});
 function render(){
  const c=scenarios[state.id],d=draft(state),a=$('action');a.replaceChildren();
+ if(catalog)renderPolicyContext($('policy-context'),catalog,state.id);
  $('role').value=role;document.querySelector('.task').dataset.currentRole=role;document.querySelector('#process-view').dataset.currentRole=role;
  for(const b of document.querySelectorAll('.project'))b.setAttribute('aria-pressed',String(b.dataset.id===state.id));
  set('discipline',`${c.discipline} · ${c.group} · ${c.person}`);set('project-title',c.title);set('arrival',c.arrival);
@@ -52,30 +55,30 @@ function render(){
  }else if(state.phase==='review'){
   set('step','4 · Independent questions');set('role-context',`Next reviewer: ${roles[reviewer]}. ${c.reviewQuestions[reviewer]}`);
   if(role===reviewer){
-   const response=select(a,'review-reason','What can you say from this draft?',c.reviewOptions[role],'Choose what is still missing');
+   const response=cards(a,'review-reason','What can you say from this draft?',c.reviewOptions[role]);
    let metadata,access;
    if(role==='community'){
-    metadata=select(a,'metadata','Description visibility',[{id:'private',label:'Keep private'},{id:'review-needed',label:'Request separate visibility decision'}],'Choose description status');
-    access=select(a,'access','File requests',[{id:'none',label:'No request route yet'},{id:'request-review',label:'Requests need separate decision'}],'Choose file request status');
+    metadata=cards(a,'metadata','Description visibility',[{id:'private',label:'Keep private'},{id:'review-needed',label:'Request separate visibility decision'}]);
+    access=cards(a,'access','File requests',[{id:'none',label:'No request route yet'},{id:'request-review',label:'Requests need separate decision'}]);
    }
    if(state.revisedRoles[role]){
     paragraph(a,'You have practiced returning this question once. Record what remains unverified; a real reviewer would continue outside this exercise.');
    }else{
     const returnButton=gated(a,'Ask researcher for this missing check',[response],()=>action({type:'review',role,decision:'return',reason:response.value}));
     const updateReturn=()=>returnButton.disabled=response.value!==`${role}-evidence`;
-    response.addEventListener('input',updateReturn);updateReturn();
+    response.addEventListener('change',updateReturn);updateReturn();
    }
    gated(a,'Record this training response',[response,...(metadata?[metadata,access]:[])],()=>{const option=c.reviewOptions[role].find(o=>o.id===response.value);action({type:'review',role,decision:option.decision,reason:option.id,metadata:metadata?.value,access:access?.value});});
   }
  }else if(state.phase==='returned'){
   set('step','4 · A question came back');set('role-context','Change the private plan before the reviewer answers again. The workbench generates a new evidence pointer for the proposed correction. This does not verify the missing check.');
-  if(researcher){const returned=Object.keys(state.reviews).find(r=>state.reviews[r].decision==='return');const plan=select(a,'changed-plan','What will you propose to change?',c.revisionChoices[returned],'Choose a response to this reviewer’s question');gated(a,'Send proposed correction',[plan],()=>action({type:'revise',plan:plan.value}));}
+  if(researcher){const returned=Object.keys(state.reviews).find(r=>state.reviews[r].decision==='return');const plan=cards(a,'changed-plan','What will you propose to change?',c.revisionChoices[returned]);gated(a,'Send proposed correction',[plan],()=>action({type:'revise',plan:plan.value}));}
  }else if(state.phase==='curator'){
   set('step','5 · Package question');set('role-context',`${c.candidate} is a candidate only. The curator has not inspected actual files, capacity or integrity.`);
-  if(role==='curator'){const reason=select(a,'curator-reason','Package observation and reason',c.curatorReasons,'Choose what remains to be checked');if(!state.packageRepaired)button(a,'Return package for correction',()=>action({type:'receipt',role,decision:'return'}));else paragraph(a,'You have practiced one package return. Record remaining checks; real acceptance needs an actual curator.');gated(a,'Record package observation',[reason],()=>action({type:'receipt',role,decision:'noted',reason:reason.value}));}
+  if(role==='curator'){const reason=cards(a,'curator-reason','Package observation and reason',c.curatorReasons);if(!state.packageRepaired)button(a,'Return package for correction',()=>action({type:'receipt',role,decision:'return'}));else paragraph(a,'You have practiced one package return. Record remaining checks; real acceptance needs an actual curator.');gated(a,'Record package observation',[reason],()=>action({type:'receipt',role,decision:'noted',reason:reason.value}));}
  }else if(state.phase==='repair'){
   set('step','5 · Package returned');set('role-context','Change the proposed inventory plan. A new pointer is generated, but actual capacity and file integrity remain open.');
-  if(researcher){const plan=select(a,'package-plan','Changed package plan',c.packagePlans.filter(p=>p.id!==state.packagePlan),'Choose a changed package plan');gated(a,'Send revised package',[plan],()=>action({type:'repair',plan:plan.value}));}
+  if(researcher){const plan=cards(a,'package-plan','Changed package plan',c.packagePlans.filter(p=>p.id!==state.packagePlan));gated(a,'Send revised package',[plan],()=>action({type:'repair',plan:plan.value}));}
  }else{
   set('step','5 · What remains');set('role-context',`Training responses recorded. No actual inspection, consent decision, rights review or transfer happened. ${c.external}`);
   set('result',state.phase==='hold'?`Hard hold. No next action in this exercise. ${c.hold} ${c.external}`:`No next action in this exercise. This draft still needs external checks. ${c.external}`);

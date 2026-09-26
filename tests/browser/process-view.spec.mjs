@@ -11,11 +11,11 @@ test('role and process remain visible, choice trade-offs precede action and gene
  await page.getByRole('button',{name:'Make draft and ask reviewers'}).click();
  await expect(page.locator('#evidence')).toContainText('EV-STELLAR-SURVEY-001');
  await page.getByLabel('Acting as').selectOption('steward');
- await page.getByLabel('What can you say from this draft?').selectOption('steward-evidence');
+ await page.getByRole('group',{name:'What can you say from this draft?'}).locator('input[value="steward-evidence"]').check();
  await page.getByRole('button',{name:'Ask researcher for this missing check'}).click();
  await expect(page.locator('#open-items')).toContainText('Q-STELLAR-SURVEY-001');
  await page.getByLabel('Acting as').selectOption('researcher');
- await page.getByLabel('What will you propose to change?').selectOption('fix-steward');
+ await page.getByRole('group',{name:'What will you propose to change?'}).locator('input[value="fix-steward"]').check();
  await page.getByRole('button',{name:'Send proposed correction'}).click();
  await expect(page.locator('#fixed-items')).toContainText('EV-STELLAR-SURVEY-002');
  await expect(page.locator('#open-items')).toContainText('capacity');
