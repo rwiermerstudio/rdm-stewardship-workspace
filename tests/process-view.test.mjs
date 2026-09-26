@@ -42,3 +42,26 @@ test('all roles remain visible while only next reviewer can act',()=>{
  assert.equal(view.roles.find(x=>x.role==='curator').status,'not in this practice route');
  assert.equal(view.steps.find(x=>x.name==='Repository question').status,'not in this practice route');
 });
+test('reviewer return appears as returned work, not a waiting process step',()=>{
+ let s=prepared('oral-heritage');s=send(s,'review',{role:'steward',decision:'return',reason:'steward-evidence'});
+ const view=processView(s);
+ assert.equal(view.roles.find(x=>x.role==='steward').status,'returned');
+ assert.equal(view.steps.find(x=>x.name==='Independent questions').status,'returned');
+});
+test('curator return appears as returned work, not a waiting role and step',()=>{
+ let s=prepared('stellar-survey');s=send(s,'review',{role:'steward',decision:'noted',reason:'steward-scope'});
+ s=send(s,'receipt',{role:'curator',decision:'return'});
+ const view=processView(s);
+ assert.equal(view.roles.find(x=>x.role==='curator').status,'returned');
+ assert.equal(view.steps.find(x=>x.name==='Repository question').status,'returned');
+});
+test('several returned questions retain all proposed corrections in the readable draft',()=>{
+ let s=prepared('oral-heritage');
+ s=send(s,'review',{role:'steward',decision:'return',reason:'steward-evidence'});
+ s=send(s,'revise',{plan:'fix-steward'});
+ s=send(s,'review',{role:'steward',decision:'noted',reason:'steward-scope'});
+ s=send(s,'review',{role:'privacy',decision:'return',reason:'privacy-evidence'});
+ s=send(s,'revise',{plan:'fix-privacy'});
+ assert.match(model.draft(s).record,/EV-ORAL-HERITAGE-002.*correction log/s);
+ assert.match(model.draft(s).record,/EV-ORAL-HERITAGE-003.*consent terms/s);
+});

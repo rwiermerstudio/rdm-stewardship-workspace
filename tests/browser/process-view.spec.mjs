@@ -20,3 +20,13 @@ test('role and process remain visible, choice trade-offs precede action and gene
  await expect(page.locator('#fixed-items')).toContainText('EV-STELLAR-SURVEY-002');
  await expect(page.locator('#open-items')).toContainText('capacity');
 });
+test('reset remains available before recording and after a risky draft',async({page})=>{
+ await page.goto('/');
+ await expect(page.getByRole('button',{name:'Reset this project'})).toBeVisible();
+ await page.locator('.project[data-id="variant-study"]').click();
+ await page.locator('[data-choice="vault"]').click();
+ await expect(page.getByRole('button',{name:'Reset this project'})).toBeVisible();
+ await page.getByRole('button',{name:'Reset this project'}).click();
+ await expect(page.locator('#step')).toContainText('Choose an action');
+ await expect(page.locator('#history-section')).toBeHidden();
+});
