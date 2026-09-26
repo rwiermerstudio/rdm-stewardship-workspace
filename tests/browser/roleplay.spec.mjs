@@ -70,3 +70,69 @@ test('a reviewer can return only a missing-check statement',async({page})=>{
  await response.selectOption('steward-evidence');
  await expect(page.getByRole('button',{name:'Ask researcher for this missing check'})).toBeEnabled();
 });
+for(const [id,good,reviewers] of [
+ ['oral-heritage','ask',['steward','privacy','community']],['stellar-survey','run',['steward']],
+ ['neighbourhood-voices','scope',['steward','privacy']],['coastal-species','assess',['steward','privacy']],
+ ['variant-study','refer',['steward','privacy']],['brain-maps','check',['steward','privacy']]
+])test(`${id}: automatic ownership, concrete examples and terminal reason`,async({page})=>{
+ await page.goto('/');await page.locator(`.project[data-id="${id}"]`).click();
+ for(const option of await page.locator('[data-choice]').all())await expect(option).toContainText('Fictional');
+ await choose(page,good);await expect(page.locator('#record')).toContainText('EXAMPLE');
+ await page.getByRole('button',{name:'Continue to the change record'}).click();
+ await page.getByRole('button',{name:'Make draft and ask reviewers'}).click();
+ for(const [i,r] of reviewers.entries()){
+  await expect(page.locator('#role')).toHaveValue(r);
+  await expect(page.locator('#role-lanes .current-role')).toContainText('Current role');
+  await expect(page.locator('.task')).toHaveAttribute('data-current-role',r);
+  await expect(page.locator('#role-context')).toContainText(`Current role: ${r==='steward'?'Data steward':r==='privacy'?'Privacy reviewer':r==='community'?'Community-appointed reviewer':r==='curator'?'Repository curator':'Researcher'}`);
+  await review(page,r);
+  if(i<reviewers.length-1)await expect(page.locator('#role')).toHaveValue(reviewers[i+1]);
+ }
+ if(id==='stellar-survey')await expect(page.locator('#role')).toHaveValue('curator');
+ else{await expect(page.locator('#next-person')).toContainText('No next action in this exercise');await expect(page.locator('#role')).toHaveValue(reviewers.at(-1));}
+});
+test('manual switching is simulation; returns refocus researcher and repairs refocus reviewer',async({page})=>{
+ await page.goto('/');await prepare(page,'stellar-survey','run');await expect(page.locator('#role')).toHaveValue('steward');
+ await role(page,'researcher');await expect(page.locator('#role-context')).toContainText('simulation');
+ await role(page,'steward');await page.getByLabel('What can you say from this draft?').selectOption('steward-evidence');
+ await page.getByRole('button',{name:'Ask researcher for this missing check'}).click();await expect(page.locator('#role')).toHaveValue('researcher');
+ await page.getByLabel('What will you propose to change?').selectOption('fix-steward');await page.getByRole('button',{name:'Send proposed correction'}).click();await expect(page.locator('#role')).toHaveValue('steward');
+ await review(page,'steward');await expect(page.locator('#role')).toHaveValue('curator');
+ await page.getByRole('button',{name:'Return package for correction'}).click();await expect(page.locator('#role')).toHaveValue('researcher');
+ await page.getByLabel('Changed package plan').selectOption('inventory-revised');await page.getByRole('button',{name:'Send revised package'}).click();await expect(page.locator('#role')).toHaveValue('curator');
+});
+for(const width of [1280,390])test(`role markers keyboard and axe at ${width}px`,async({page})=>{
+ await page.setViewportSize({width,height:850});await page.goto('/');await prepare(page,'oral-heritage','ask');
+ const marker=page.locator('#role-lanes .current-role');await expect(marker).toHaveAttribute('data-role','steward');
+ await expect(marker).toContainText('Current role');await expect(page.locator('.task')).toHaveAttribute('data-current-role','steward');
+ await page.locator('#role').focus();await expect(page.locator('#role')).toBeFocused();
+ await expect(page.locator('#step')).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1)).toBe(false);
+ expect((await new AxeBuilder({page}).analyze()).violations).toEqual([]);
+});
+test('all role accents differ and manual switching updates map and task',async({page})=>{
+ await page.goto('/');await prepare(page,'oral-heritage','ask');
+ const accents=[];
+ for(const r of ['researcher','steward','privacy','community','curator']){
+  await role(page,r);
+  const marker=page.locator(`#role-lanes [data-role="${r}"]`);
+  await expect(marker).toHaveAttribute('aria-current','step');
+  await expect(page.locator('.task')).toHaveAttribute('data-current-role',r);
+  accents.push(await marker.evaluate(el=>getComputedStyle(el).outlineColor));
+ }
+ expect(new Set(accents).size).toBe(5);
+});
+test('all twelve blocked choices state why and what to do instead',async({page})=>{
+ await page.goto('/');
+ for(const [id,choices] of [
+  ['oral-heritage',['publish','private']],['stellar-survey',['copy','wait']],
+  ['neighbourhood-voices',['post','delete']],['coastal-species',['map','source']],
+  ['variant-study',['vault','public']],['brain-maps',['done','sidecar']]
+ ])for(const choice of choices){
+  await page.locator(`.project[data-id="${id}"]`).click();await choose(page,choice);
+  await expect(page.locator('#role-context')).toContainText('Cannot advance:');
+  await expect(page.locator('#record')).toContainText('Cannot advance:');
+  await expect(page.locator('#role')).toHaveValue('researcher');
+  await expect(page.getByRole('button',{name:'Continue to the change record'})).toHaveCount(0);
+ }
+});

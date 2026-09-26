@@ -73,8 +73,44 @@ const tradeoffs={
   sidecar:['Removing fields can reduce disclosure.','Deleting every field loses necessary context.','Actual scans and remaining fields need inspection.'],
   check:['Both image and companion-file risks get reviewed.','The handoff waits for human inspection.','Actual images, fields and intended use remain unchecked.']}
 };
+// Invented snippets show what a researcher might actually write or do, never real authorization.
+const examples={
+ 'oral-heritage':{
+  publish:'Fictional catalogue draft: title "EXAMPLE community recording collection"; visibility = public today, without community review.',
+  private:'Fictional catalogue draft: visibility = private indefinitely; note "EXAMPLE institute decides discoverability alone".',
+  ask:'Fictional request: "Keep EXAMPLE collection title private. Ask the appointed community body about title discovery and recording requests separately; ask the privacy office to check consent terms."'},
+ 'stellar-survey':{
+  copy:'Fictional transfer list: "sky-calibrated-EXAMPLE.fits" only; omit the pipeline-run-EXAMPLE.txt method record.',
+  run:'Fictional draft method note: "Link sky-raw-v1 to sky-calibrated-v2 using pipeline-run-EXAMPLE.txt; request archive capacity and file checks before transfer."',
+  wait:'Fictional lab note: "Hold sky-calibrated-EXAMPLE.fits until every tile is checked; leave pipeline-run-EXAMPLE.txt unlinked for now."'},
+ 'neighbourhood-voices':{
+  post:'Fictional release note: "Publish coded-table-EXAMPLE.csv for general use" despite the limited interview agreement.',
+  delete:'Fictional package instruction: "Delete guide-EXAMPLE.csv and retain coded-table-EXAMPLE.csv without definitions of its codes."',
+  scope:'Fictional proposed-use note: "Keep coded-table-EXAMPLE.csv and guide-EXAMPLE.csv private; ask the consent owner whether secondary analysis of neighbourhood change fits the limited agreement. No new use is authorized here."'},
+ 'coastal-species':{
+  map:'Fictional map draft: "Publish area-EXAMPLE.csv and preview-EXAMPLE.tiff with a public caption" before outside location-risk review.',
+  source:'Fictional partner email draft: "Send restricted-EXAMPLE.csv with exact sites for checking" before approving a safe route.',
+  assess:'Fictional review request: "Keep area-EXAMPLE.csv and its caption private; ask an independent ecology location-risk specialist to assess inference risk without putting exact sites in this exercise."'},
+ 'variant-study':{
+  vault:'Fictional job draft: "Start calling variants from reads-EXAMPLE.fastq in the secure vault" while consent and approved purpose are unknown.',
+  public:'Fictional sharing draft: "Send variants-EXAMPLE.vcf to collaborators" despite unknown consent; no actual genetic data is shown.',
+  refer:'Fictional pause note: "Do not run reads-EXAMPLE.fastq. Refer the proposed variant analysis purpose to the project consent owner and privacy specialist; wait for their actual determination."'},
+ 'brain-maps':{
+  done:'Fictional transfer draft: "Move scan-EXAMPLE.nii and scan-EXAMPLE.json to the vault now" without human inspection.',
+  sidecar:'Fictional package draft: "Delete every scan-EXAMPLE.json companion file" rather than inspect fields and retain safe method context.',
+  check:'Fictional inspection request: "Keep scan-EXAMPLE.nii and scan-EXAMPLE.json restricted; ask a trained image reviewer and privacy office to inspect residual identifiers and intended use before transfer."'}
+};
+const blockedCorrections={
+ 'oral-heritage':{publish:'Cannot advance: even the public title may identify a tradition. Keep it private and ask the appointed community body about discovery and the privacy office about consent.',private:'Cannot advance: the institute cannot decide permanent discoverability for the community. Keep it private temporarily and request the appointed body’s decision.'},
+ 'stellar-survey':{copy:'Cannot advance: the images have no traceable correction method. Link the processing run and calibration inputs and request archive capacity checks.',wait:'Cannot advance: waiting for image checks does not identify the run. Record the proposed run link now and arrange the checks.'},
+ 'neighbourhood-voices':{post:'Cannot advance: coding does not establish permission for public use. Keep the table private and ask the consent owner and privacy office to check the stated purpose.',delete:'Cannot advance: deleting the guide makes the coded table uninterpretable. Retain the guide privately and ask the consent owner about intended use.'},
+ 'coastal-species':{map:'Cannot advance: map areas and captions may expose rare sites. Keep both private and request an independent location-risk assessment.',source:'Cannot advance: sharing exact sites adds risk. Keep restricted source files private and request independent assessment of the proposed coarse map.'},
+ 'variant-study':{vault:'Cannot advance: storage security cannot grant reuse authority. Pause the job and refer consent and purpose to the project consent owner and privacy specialist.',public:'Cannot advance: derived variants may still be sensitive and consent is unknown. Pause sharing and refer the intended use to the consent owner.'},
+ 'brain-maps':{done:'Cannot advance: defacing is not a human check of images or companion fields. Request trained image and privacy inspection before transfer.',sidecar:'Cannot advance: deleting all companion files loses method context without assessing residual risk. Retain them restricted and request human inspection.'}
+};
 for(const [id,options] of Object.entries(tradeoffs))for(const option of scenarios[id].choices){
  const [gain,cost,unknown]=options[option.id];Object.assign(option,{gain,cost,unknown});
+ option.example=examples[id][option.id];option.blockedReason=blockedCorrections[id][option.id]||'';
 }
 const soundConsequences={
  'oral-heritage':'The draft keeps the title private and asks the appointed community body about discovery separately from recording requests. Actual consent terms still need privacy review.',

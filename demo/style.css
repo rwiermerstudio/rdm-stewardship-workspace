@@ -15,3 +15,16 @@
 
 #process-view{padding:.6rem 1rem;max-height:none}#process-view>p{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}#process-view h3{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}#process-view h2{font-size:1.15rem;margin:0 0 .35rem}#process-steps,#role-lanes{margin:.25rem 0}#process-view li{padding:.25rem .4rem;font-size:.76rem}#role-lanes summary{font-size:.74rem}
 @media(max-width:760px){#process-view{top:0;padding:.5rem .65rem}#process-steps{grid-template-columns:repeat(4,minmax(0,1fr))}#role-lanes{grid-template-columns:repeat(3,minmax(0,1fr))}#process-steps li{font-size:.68rem}.role-status{font-size:.7rem}}
+/* A role has its own accent, but the outline and visible label carry meaning too. */
+:root{--researcher:#275b48;--steward:#255e84;--privacy:#783d70;--community:#8b541e;--curator:#514b91}
+#role-lanes [data-role=researcher],.task[data-current-role=researcher],#process-view[data-current-role=researcher]{--role-accent:var(--researcher)}
+#role-lanes [data-role=steward],.task[data-current-role=steward],#process-view[data-current-role=steward]{--role-accent:var(--steward)}
+#role-lanes [data-role=privacy],.task[data-current-role=privacy],#process-view[data-current-role=privacy]{--role-accent:var(--privacy)}
+#role-lanes [data-role=community],.task[data-current-role=community],#process-view[data-current-role=community]{--role-accent:var(--community)}
+#role-lanes [data-role=curator],.task[data-current-role=curator],#process-view[data-current-role=curator]{--role-accent:var(--curator)}
+#role-lanes .current-role{outline:3px solid var(--role-accent);outline-offset:-3px;background:#fff;font-weight:700}
+#role-lanes .current-role .role-status{color:var(--role-accent);text-decoration:underline;text-underline-offset:.15em}
+.task[data-current-role]{border:3px solid var(--role-accent);border-inline-start-width:8px}
+.task[data-current-role] #role-context{border-inline-start:4px solid var(--role-accent);padding-inline-start:.7rem}
+#process-view[data-current-role]{border-top:4px solid var(--role-accent)}
+@media(max-width:760px){#role-lanes .current-role{outline-width:3px}#role-lanes .current-role .role-status{font-size:.7rem}}
