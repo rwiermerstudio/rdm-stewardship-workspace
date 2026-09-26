@@ -4,24 +4,20 @@
 
 ## Try the browser exercise
 
-[Open the Meridian Stewardship Studio](https://rwiermerstudio.github.io/rdm-stewardship-workspace/) or serve the `demo/` directory with `python3 -m http.server 8765 --directory demo` and visit `http://localhost:8765`. The static HTML/CSS/JavaScript has no account, backend, uploads, persistence or analytics; it resets on refresh. Internet access is optional (only the web fonts and external standards links use it).
+Serve `demo/` locally with `python3 -m http.server 8765 --directory demo` and visit `http://localhost:8765`. The [published site](https://rwiermerstudio.github.io/rdm-stewardship-workspace/) may still show the earlier version until this branch is independently reviewed and released. No account, backend, upload, persistence or analytics is built into the exercise; refresh clears it.
 
-Choose among six catalogue projects. Each briefing states your job now, expected formats and scale, a safe synthetic manifest, what is known and unresolved, options and a next step. The version IDs are prefilled from the fictional catalogue. Enter only invented change and evidence references, not data. The browser assembles a change/provenance draft and a preservation checklist as you go, labelled by catalogue, researcher and simulated reviewer source. Switch roles to test decisions; a return goes back to the researcher. Community metadata visibility and file access remain separate. Unknown genomic consent and coastal re-identification block a simulated acceptance even if the role-play reviewers click accept. Reset or refresh discards the exercise.
+Meridian is an invented Dutch institute. Choose one of six projects and answer its specific question before reading a change record. A risky choice has a concrete consequence and a retry. The workbench starts with invented old and new copy labels, takes only an invented method reference from you, and drafts a short record and a project-specific handoff checklist. Reviewers answer separate questions; role switching is only a teaching device. The oral-history path visits the steward, privacy reviewer, community-appointed reviewer and curator. A community description and requests for recordings stay separate. Unknown genomic consent and unassessed coastal location risk remain hard holds even after exercise responses.
 
-**How to compare:** Sky calibration uses a single steward review for a 120,000 GiB FITS/Zarr pipeline and large-object archive candidate. Oral heritage needs steward, privacy and community custody review for 600 GiB WAV/TIFF/TXT, with private metadata. Coastal GIS keeps raw locations restricted and holds a generalized derivative for re-identification review. Neighbourhood interviews require limited-consent review and a coding record. The variant cohort has an unknown-consent hold despite a vault candidate. MRI needs defacing and sidecar disclosure checks. Sample manifests contain no actual images, coordinates, recordings, transcripts or variants. Briefing prose and file names beyond catalogue fields are seeded illustrations, not validated records.
-
-**Simulation, not permission.** Switching roles is not authentication; fictional decisions do not grant rights, create files, check real checksums, mint metadata, reserve space or transfer custody. Text fields cannot reliably distinguish fictional from real material—do **not** enter actual names, private reviewer notes, coordinates, consent text or credentials. There is no export, including no public export of reviewer notes. Use a real institution's approved process for real research.
+**No permission is created.** The page never opens files, verifies consent, checks actual file integrity, reserves archive space or deposits anything. Do not type real names, quotes, locations, genomes, consent material or credentials. Invented catalogue examples are not validated research records. See [role-play design and evaluation](docs/ROLEPLAY.md) and [learning specification](docs/LEARNING-REWRITE.md).
 
 ```sh
 python3 -m pip install -r requirements-dev.txt
-python3 -m unittest discover -s tests -v
+python3 -m unittest discover -s tests -q
 npm ci
 npm test
 npx playwright install chromium
 npm run test:browser
 ```
-
-See [role-play design and evaluation](docs/ROLEPLAY.md) for the state transitions, test evidence and remaining limits.
 
 The central object is a **decision docket** attached to a project and data-product version. A researcher records a change or intended reuse, sees the most appropriate documentation artifact and preservation next steps, and is referred to the right human authority when a rule, consent term, or community agreement is unclear. A living DMP is a *view* assembled from such reviewed records, never a competing source of truth.
 

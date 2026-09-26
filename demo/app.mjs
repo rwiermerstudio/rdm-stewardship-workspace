@@ -1,48 +1,57 @@
-import {fresh,transition,view,scenarios,roles,draft} from './model.mjs';
-import {sampleShapes} from './scenarios.mjs';
-let state=fresh('oral-heritage'), role='researcher';
+import {fresh,transition,draft,nextRole,scenarios,roles} from './model.mjs';
+let state=fresh(),role='researcher';
 const $=id=>document.getElementById(id);
-const text=(id,value)=>$(id).textContent=value;
-const add=(parent,tag,content,cls)=>{const el=document.createElement(tag);el.textContent=content;if(cls)el.className=cls;parent.append(el);return el;};
-const storyKeys=Object.keys(scenarios).filter(key=>key===scenarios[key].catalogueId);
-for(const [i,key] of storyKeys.entries()) {const b=add($('stories'),'button',`${String(i+1).padStart(2,'0')}   ${scenarios[key].title}`,'story');b.type='button';b.dataset.story=key;b.addEventListener('click',()=>{state=fresh(key);role='researcher';$('role').value=role;render();});}
-for(const [key,name] of Object.entries(roles)){const o=document.createElement('option');o.value=key;o.textContent=name;$('role').append(o);}
-$('role').addEventListener('change',e=>{role=e.target.value;render();});
-$('reset').addEventListener('click',()=>{state=fresh(state.scenario);role='researcher';$('role').value=role;render();$('status').focus();});
-$('status').tabIndex=-1;
-function field(label,name,placeholder,value='',kind='input') {const id=`field-${name}`;const control=kind==='textarea'?`<textarea id="${id}" name="${name}" maxlength="180" required placeholder="${placeholder}"></textarea>`:`<input id="${id}" name="${name}" maxlength="180" required placeholder="${placeholder}" value="${value}">`;return `<label for="${id}">${label}</label>${control}`;}
-function form(markup,button,handler){$('form-area').innerHTML=`<form id="desk-form">${markup}<button class="primary" type="submit">${button} <span aria-hidden="true">↗</span></button><p id="error" class="error" role="alert"></p></form>`;$('desk-form').addEventListener('submit',e=>{e.preventDefault();const data=Object.fromEntries(new FormData(e.currentTarget));try{state=transition(state,{role,...handler(data)});render();$('status').focus();}catch(err){text('error',err.message);}});}
-function render(){const cfg=scenarios[state.scenario],v=view(state,role),pending=state.required.filter(r=>state.decisions[r]?.decision!=='accept');
- for(const b of document.querySelectorAll('.story')){b.classList.toggle('selected',b.dataset.story===state.scenario);b.setAttribute('aria-current',b.dataset.story===state.scenario?'true':'false');}
- text('scenario-number',String(storyKeys.indexOf(state.scenario)+1).padStart(2,'0'));text('story-title',cfg.title);text('story-subtitle',cfg.subtitle);text('role-badge',roles[role]);text('question',cfg.question);
- for(const key of ['purpose','assets','known','unknown','options','outcome']) text(key,cfg[key]);
- text('sample',`${cfg.sample}\n\nSynthetic structure (illustrative, not imported):\n${sampleShapes[cfg.catalogueId]}`);
- text('moment',role==='researcher'?cfg.moment:role==='curator'?`You are the repository curator. ${cfg.hardHold?`This case has an external hold: ${cfg.hold} Do not accept a handoff here.`:'Check the proposed package only after its scoped reviews; this is not an actual deposit.'}`:`You are the ${roles[role].toLowerCase()}. ${cfg.review[role]||'This scenario does not assign you a review. Return to the researcher or another assigned role.'}`);
- const generated=draft(state);text('change-draft',generated.record);text('handoff-draft',generated.handoff);
- text('status',!state.description?'NOT STARTED':state.receipt?.decision==='accept'?'SIMULATED HANDOFF':state.receipt?.decision==='reject'?'HANDOFF RETURNED':pending.length?'REVIEW IN PROGRESS':cfg.hardHold?'EXTERNAL HOLD':'AWAITING CURATOR');
- for(const [i,active] of [!!state.description,pending.length===0,!!state.receipt].entries()) $('stage-'+(i+1)).classList.toggle('complete',active);
- for(const [id,items] of Object.entries(v)){const list=$(id);list.replaceChildren();for(const item of items)add(list,'li',item);if(!items.length)add(list,'li','Nothing assigned at this step.','muted');}
- const area=$('form-area');area.replaceChildren();$('context').replaceChildren();
- if(!state.description && role==='researcher') {text('summary',cfg.task);form(`<p class="hint">Catalogue version IDs are prefilled. Confirm or replace with invented references only. Do not enter participant, location or genomic content.</p>${field('What changed?','change','e.g. Describe the proposed transformation','','textarea')}${field('Starting version ID','input','e.g. oral-source-v1',cfg.defaultInput)}${field('Resulting version ID','output','e.g. oral-redacted-v2',cfg.defaultOutput)}${field('Safe evidence reference','evidence','e.g. restricted-log-ref-1')}`,'Record fictional change',d=>({type:'describe',...d}));}
- else if(!state.description) text('summary',`${roles[role]} has nothing to review yet. Switch to Researcher to begin.`);
- else {
-  text('summary',role==='researcher'?'Your change record is in place. Decisions below are fictional and never authorise sharing.':role==='curator'?'A candidate repository is not a deposit. Check a simulated manifest, fixity reference and rights/access statement.':'Your determination is scoped to this story; record a reason, not private subject material.');
-  if(role==='researcher'){
-   const desc=add($('context'),'div','CHANGE RECORD · FOR THIS EXERCISE','context-label');
-   add($('context'),'p',`${state.description.change} · ${state.description.input} → ${state.description.output}`);
-   add($('context'),'p',`Evidence pointer: ${state.description.evidence}`);
-   if(state.plan)add($('context'),'p',`Revised plan: ${state.plan}`);
-   for(const r of state.required){const d=state.decisions[r];if(d)add($('context'),'p',`${roles[r]} — ${d.decision}: ${d.reason}${r==='community'?` · Metadata: ${d.metadata}; data access: ${d.access}`:''}`);}
-   if(state.receipt)add($('context'),'p',`Curator ${state.receipt.decision} (${state.receipt.id}): ${state.receipt.reason}. This receipt is simulated.`);
-   if(state.required.some(r=>state.decisions[r] && state.decisions[r].decision!=='accept'))form(`${field('Your revised plan (invented, no subject content)','plan','e.g. Narrow use; leave metadata private','','textarea')}`,'Return revised plan',d=>({type:'revise',...d}));
-  }else if(state.required.includes(role)&&pending.includes(role)&&!state.decisions[role]){
-   add($('context'),'p',`Question: ${cfg.review[role]}`);
-   add($('context'),'p',`Safe reference: ${state.description.evidence} · Fictional rule: ${role==='community'?'HER-COMM §1':role==='privacy'?'MI-PRIV §3':'MI-DOC §2'}.`);
-   form(`<label for="field-decision">Your fictional determination</label><select id="field-decision" name="decision"><option value="needs-info">Needs more information</option><option value="reject">Reject this plan</option><option value="accept">Accept this scoped plan (simulation)</option></select>${role==='community'?'<div class="two-fields"><div><label for="field-metadata">Metadata visibility</label><select id="field-metadata" name="metadata"><option value="private">Keep private</option><option value="reviewed">Request separate visibility review</option></select></div><div><label for="field-access">Data access route</label><select id="field-access" name="access"><option value="none">No access route yet</option><option value="mediated">Mediated requests only</option></select></div></div><p class="hint">A metadata choice is not a data access grant. Public metadata cannot be enabled here.</p>':''}${field('Reason (no private notes)','reason','e.g. Intended use is still too broad','','textarea')}`,'Record determination',d=>({type:'determine',...d}));
-  }else if(role==='curator'&&!pending.length){if(cfg.hardHold){add($('context'),'p',`External hold: ${cfg.hold} This exercise cannot accept a handoff. An authorised person outside this simulation must resolve it.`);}else{add($('context'),'p',`Candidate: ${cfg.repository}. The exercise has no files, checksum or real reservation; assess invented references only.`);form(`<label for="field-decision">Simulated receipt</label><select id="field-decision" name="decision"><option value="reject">Reject handoff</option><option value="accept">Accept simulated handoff</option></select>${field('Reason: manifest, fixity and rights check','reason','e.g. Invented checksum reference missing','','textarea')}`,'Record simulated receipt',d=>({type:'receipt',...d}));}}
-  else add($('context'),'p','This role cannot take over another role’s question. Switch roles to continue.');
- }
- const list=$('events');list.replaceChildren();if(!state.events.length)add(list,'li','No events yet. Describe a fictional change to begin.','empty');
- for(const e of state.events){const li=document.createElement('li');add(li,'span',String(e.step).padStart(2,'0'),'event-no');const body=add(li,'div','');add(body,'strong',`${roles[e.role]} · ${e.action}`);add(body,'p',e.detail);list.append(li);}text('event-count',`${state.events.length} ${state.events.length===1?'EVENT':'EVENTS'}`);
+const set=(id,value)=>{$(id).textContent=value;};
+const button=(parent,label,handler,css='')=>{const el=document.createElement('button');el.type='button';el.textContent=label;el.className=css;el.addEventListener('click',handler);parent.append(el);return el;};
+const action=a=>{try{state=transition(state,a);render();$('step').focus();}catch(error){set('feedback',error.message);}};
+$('step').tabIndex=-1;
+for(const [id,c] of Object.entries(scenarios)){const b=button($('projects'),c.title,()=>{state=fresh(id);role='researcher';$('role').value=role;render();$('project-title').focus();},'project');b.dataset.id=id;}
+for(const [id,name] of Object.entries(roles)){const opt=document.createElement('option');opt.value=id;opt.textContent=name;$('role').append(opt);}
+$('role').addEventListener('change',event=>{role=event.target.value;render();$('step').focus();});
+$('reset').addEventListener('click',()=>{state=fresh(state.id);role='researcher';$('role').value=role;render();$('project-title').focus();});
+function render(){
+ const c=scenarios[state.id],d=draft(state),a=$('action');a.replaceChildren();
+ for(const b of document.querySelectorAll('.project')){const selected=b.dataset.id===state.id;b.setAttribute('aria-pressed',String(selected));}
+ set('discipline',`${c.discipline} · ${c.group} · ${c.person}`);set('project-title',c.title);set('arrival',c.arrival);set('files',c.files);set('sample',c.sample);
+ set('versions',`Earlier copy: ${c.from}. Proposed copy: ${c.to}. These are invented labels, not files in this page.`);
+ set('project-question',c.question);set('feedback',state.phase==='feedback'?state.feedback:state.lastOutcome||'');set('result','');
+ set('supplied',state.reference||'An invented method or evidence reference after your first choice. Never enter subject content.');set('record',d.record);set('handoff',d.handoff);
+ set('human',c.hold?`${c.hold} A click here cannot clear this hold.`:c.question);
+ set('vocabulary',state.reference?'The link between the earlier copy, new copy and method is called provenance. A file list is a manifest. A checksum is a number used later to test whether a file changed. None is calculated here.':'After you connect the copies, this panel explains the terms used for that record.');
+ set('next-person',state.phase==='review'?`Next: ${roles[nextRole(state)]}. Their response concerns only their question.`:state.phase==='returned'?'The researcher needs to revise the plan before that reviewer can answer again.':state.phase==='hold'?'An outside authority must resolve the hold. The curator has no acceptance action here.':state.phase==='curator'?'The curator can inspect the proposed package in this exercise.':state.phase==='done'?'The handoff here is only a teaching result. No files moved.':state.phase==='repair'?'The researcher revises the fictional package checklist.':'Each role has its own question after you prepare the record.');
+ const researcher=role==='researcher', reviewer=nextRole(state);
+ if(state.phase==='choice'){
+  set('step','1 · Choose an action');set('role-context',researcher?'You are the researcher. Decide how to handle today’s change.':`You are acting as ${roles[role]}. The researcher makes the first choice; switch back to begin.`);
+  if(researcher){const box=document.createElement('div');box.className='choices';a.append(box);for(const option of c.choices){const b=button(box,option.label,()=>action({type:'choose',choice:option.id}));b.dataset.choice=option.id;const cue=document.createElement('small');cue.textContent=option.cue;b.append(cue);}}
+ }else if(state.phase==='feedback'){
+  set('step','2 · See what happened');set('role-context',state.progress?'This action keeps the open question with the right people.':'That choice has a consequence. You can change course without losing the project.');
+  if(researcher){button(a,'Try another action',()=>action({type:'retry'}));if(state.progress)button(a,'Continue to the change record',()=>action({type:'continue'}),'primary');}
+ }else if(state.phase==='record'){
+  set('step','3 · Connect the copies');set('role-context',`The workbench knows ${c.from} and ${c.to}. What invented reference identifies the method or check?`);
+  if(researcher){const label=document.createElement('label');label.htmlFor='reference';label.textContent='Invented method or evidence reference';a.append(label);const input=document.createElement('input');input.id='reference';input.maxLength=80;input.placeholder='fictional-run-7';a.append(input);button(a,'Make draft and ask reviewers',()=>action({type:'record',reference:input.value}),'primary');}
+ }else if(state.phase==='review'){
+  set('step','4 · Independent questions');set('role-context',`Next reviewer: ${roles[reviewer]}. ${c.reviewQuestions[reviewer]} ${state.id==='variant-study'?'Unknown consent still needs an outside authority.':state.id==='coastal-species'?'Location risk still needs an outside assessment.':''}`);
+  if(role===reviewer){
+   let metadata,access;
+   if(role==='community'){
+    const select=(id,label,options)=>{const lab=document.createElement('label');lab.htmlFor=id;lab.textContent=label;a.append(lab);const control=document.createElement('select');control.id=id;for(const [value,name] of options){const opt=document.createElement('option');opt.value=value;opt.textContent=name;control.append(opt);}a.append(control);return control;};
+    metadata=select('metadata','Description visibility',[['private','Keep private'],['review-needed','Ask for a separate visibility review']]);
+    access=select('access','File requests',[['none','No request route yet'],['request-review','Consider requests separately, with a person deciding']]);
+    const info=document.createElement('p');info.textContent='Neither choice publishes a title or opens recordings.';a.append(info);
+   }
+   button(a,'Return this question',()=>action({type:'review',role,decision:'return'}));
+   button(a,'Record scoped response',()=>action({type:'review',role,decision:'checked',metadata:metadata?.value,access:access?.value}),'primary');
+  }
+ }else if(state.phase==='returned'){
+  set('step','4 · A question came back');set('role-context','The reviewer needs a narrower or clearer plan. The researcher can send the question back; that reviewer must answer again.');if(researcher)button(a,'Revise and send back',()=>action({type:'revise'}),'primary');
+ }else if(state.phase==='hold'){
+  set('step','5 · Stop here');set('role-context',`You are acting as ${roles[role]}. ${c.hold} Ask the responsible authority outside this exercise. No simulated acceptance is available.`);set('result','This exercise cannot clear the hold or release any files.');
+ }else if(state.phase==='curator'){
+  set('step','5 · Proposed handoff');set('role-context',`You are acting as ${roles[role]}. ${c.candidate} is a candidate, not a booked destination. The curator would need a real file list, file integrity checks and rights review.`);
+  if(role==='curator'){button(a,'Return package for correction',()=>action({type:'receipt',role,decision:'return'}));button(a,'Record simulated handoff',()=>action({type:'receipt',role,decision:'ready'}),'primary');}
+ }else if(state.phase==='repair'){
+  set('step','5 · Package returned');set('role-context','The candidate package needs correction. This exercise has not checked actual files.');if(researcher)button(a,'Revise checklist and return',()=>action({type:'repair'}),'primary');
+ }else {set('step','5 · Exercise complete');set('role-context','The curator recorded a simulated handoff after the scoped questions. Actual custody and access require a real process.');set('result','Simulated handoff only, not a real deposit or permission to share.');}
+ const history=$('history');history.replaceChildren();for(const event of state.events){const li=document.createElement('li');li.textContent=event;history.append(li);}if(!state.events.length){const li=document.createElement('li');li.textContent='Choose an action to begin.';history.append(li);}
 }
 render();
