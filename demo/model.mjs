@@ -5,6 +5,13 @@ export function fresh(id='oral-heritage'){
  return {id,phase:'choice',choice:null,feedback:'',progress:false,reference:'',evidence:[],issues:[],plan:scenarios[id].safePlans[0].id,packagePlan:scenarios[id].packagePlans[0].id,reviews:{},revisedRoles:{},packageRepaired:false,receipt:null,events:[],publicMetadata:false,accessGranted:false};
 }
 export function nextRole(s){return scenarios[s.id].reviewers.find(r=>!s.reviews[r])||null;}
+// The owner of the next in-exercise action, not an authenticated identity.
+export function actionOwner(s){
+ if(['choice','feedback','record','returned','repair'].includes(s.phase))return 'researcher';
+ if(s.phase==='review')return nextRole(s);
+ if(s.phase==='curator')return 'curator';
+ return null;
+}
 function addEvidence(s,kind,description){
  const id=`EV-${s.id.toUpperCase()}-${String(s.evidence.length+1).padStart(3,'0')}`;
  s.evidence.push({id,kind,description,verified:false});s.reference=id;
@@ -12,7 +19,7 @@ function addEvidence(s,kind,description){
 }
 function noSubjectInput(a){if(Object.hasOwn(a,'reference'))throw Error('Evidence IDs are generated here; do not enter subject content');}
 export function processView(s){
- const c=scenarios[s.id],next=nextRole(s),active=['choice','feedback','record','returned','repair'].includes(s.phase)?'researcher':s.phase==='curator'?'curator':next;
+ const c=scenarios[s.id],active=actionOwner(s);
  const status=r=>r==='curator'&&s.id!=='stellar-survey'?'not in this practice route':r===active?'next':r==='curator'&&s.phase==='repair'||s.reviews[r]?.decision==='return'?'returned':s.reviews[r]&&s.issues.some(x=>x.role===r&&x.status==='open')?'open question':s.reviews[r]?'recorded':r==='researcher'&&s.reference?'drafted':r==='curator'&&s.receipt?.decision==='noted'?'recorded':'waiting';
  const roleIds=['researcher',...c.reviewers,'curator'];
  const rolesView=roleIds.map(r=>({role:r,name:roles[r],status:status(r),question:r==='researcher'?c.question:r==='curator'?'Check proposed package, capacity and integrity.':c.reviewQuestions[r]}));
@@ -96,7 +103,7 @@ export function draft(s){
   {label:'Fixed in this exercise · not verified externally',text:`Project: ${c.from}. Selected path: ${choice?.label||'none yet'}. No real files, consent or processing log were inspected.`},
   {label:'Still open · human decision or actual evidence',text:open},
   {label:'Versions',text:`${c.from} → ${c.to} (invented catalogue labels)`},
-  {label:'Proposed action',text:`${choice?.label||'Choose an action first'}. ${choice?.consequence||'No draft action yet.'}`},
+  {label:'Proposed action · fictional example',text:`${choice?.label||'Choose an action first'}. ${choice?.example||'No example yet.'} ${choice?.consequence||'No draft action yet.'} ${choice&&!choice.good?choice.blockedReason:''}`},
   {label:'Benefit and compromise',text:choice?`Gain: ${choice.gain} Cost: ${choice.cost}`:'No choice yet.'},
   {label:'Private plan · proposed',text:choice?.good?plan:'No agreed private plan in this draft.'},
   {label:'Method pointer · generated, not verified',text:method?`${method.id}: ${method.description}`:'Not generated yet.'},

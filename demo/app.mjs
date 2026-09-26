@@ -1,21 +1,22 @@
-import {fresh,transition,draft,nextRole,processView,scenarios,roles} from './model.mjs';
-let state=fresh(),role='researcher';
+import {fresh,transition,draft,nextRole,actionOwner,processView,scenarios,roles} from './model.mjs';
+let state=fresh(),role='researcher',manualSwitch=false;
 const $=id=>document.getElementById(id);
 const set=(id,value)=>{$(id).textContent=value;};
 const button=(parent,label,handler,css='')=>{const el=document.createElement('button');el.type='button';el.textContent=label;el.className=css;el.addEventListener('click',handler);parent.append(el);return el;};
 const paragraph=(parent,text)=>{const el=document.createElement('p');el.textContent=text;parent.append(el);};
-const action=a=>{try{state=transition(state,a);render();$('step').focus();}catch(error){set('feedback',error.message);}};
+const action=a=>{try{state=transition(state,a);role=actionOwner(state)||role;manualSwitch=false;$('role').value=role;render();$('step').focus();}catch(error){set('feedback',error.message);}};
 const list=(id,items)=>{const root=$(id);root.replaceChildren();for(const text of items){const li=document.createElement('li');li.textContent=text;root.append(li);}};
 const renderRecord=sections=>{const root=$('record');root.replaceChildren();for(const item of sections){const term=document.createElement('dt'),description=document.createElement('dd');term.textContent=item.label;description.textContent=item.text;root.append(term,description);}};
-const renderRoles=items=>{const root=$('role-lanes');root.replaceChildren();for(const item of items){const li=document.createElement('li'),name=document.createElement('strong'),status=document.createElement('span'),details=document.createElement('details'),summary=document.createElement('summary'),question=document.createElement('p');name.textContent=item.name;status.textContent=item.status;status.className='role-status';summary.textContent='Question';question.textContent=item.question;details.append(summary,question);li.append(name,status,details);root.append(li);}};
+const renderRoles=items=>{const root=$('role-lanes');root.replaceChildren();for(const item of items){const li=document.createElement('li'),name=document.createElement('strong'),short=document.createElement('span'),status=document.createElement('span'),details=document.createElement('details'),summary=document.createElement('summary'),question=document.createElement('p');li.dataset.role=item.role;if(item.role===role){li.classList.add('current-role');li.setAttribute('aria-current','step');}name.className='role-long';name.textContent=item.name;short.className='role-short';short.textContent={researcher:'Researcher',steward:'Steward',privacy:'Privacy',community:'Community',curator:'Curator'}[item.role];short.setAttribute('aria-hidden','true');status.textContent=item.role===role?`Current role · ${item.status}`:item.status==='not in this practice route'?'outside route':item.status;status.className='role-status';summary.textContent='Question';question.textContent=item.question;details.append(summary,question);li.append(name,short,status,details);root.append(li);}};
 const select=(parent,id,label,options,placeholder)=>{const lab=document.createElement('label');lab.htmlFor=id;lab.textContent=label;parent.append(lab);const control=document.createElement('select');control.id=id;control.append(new Option(placeholder,''));for(const o of options)control.append(new Option(o.label,o.id));parent.append(control);return control;};
 const gated=(parent,label,controls,handler)=>{const b=button(parent,label,handler,'primary');b.disabled=true;const update=()=>b.disabled=controls.some(x=>!x.value);controls.forEach(x=>x.addEventListener('input',update));return b;};
-for(const [id,c] of Object.entries(scenarios)){const b=button($('projects'),`${c.title}\n${c.card}`,()=>{state=fresh(id);role='researcher';$('role').value=role;render();$('project-title').focus();},'project');b.dataset.id=id;}
+for(const [id,c] of Object.entries(scenarios)){const b=button($('projects'),`${c.title}\n${c.card}`,()=>{state=fresh(id);role='researcher';manualSwitch=false;$('role').value=role;render();$('project-title').focus();},'project');b.dataset.id=id;}
 for(const [id,name] of Object.entries(roles))$('role').append(new Option(name,id));
-$('role').addEventListener('change',event=>{role=event.target.value;render();$('step').focus();});
-$('reset').addEventListener('click',()=>{state=fresh(state.id);role='researcher';$('role').value=role;render();$('project-title').focus();});
+$('role').addEventListener('change',event=>{role=event.target.value;manualSwitch=true;render();$('step').focus();});
+$('reset').addEventListener('click',()=>{state=fresh(state.id);role='researcher';manualSwitch=false;$('role').value=role;render();$('project-title').focus();});
 function render(){
  const c=scenarios[state.id],d=draft(state),a=$('action');a.replaceChildren();
+ $('role').value=role;document.querySelector('.task').dataset.currentRole=role;document.querySelector('#process-view').dataset.currentRole=role;
  for(const b of document.querySelectorAll('.project'))b.setAttribute('aria-pressed',String(b.dataset.id===state.id));
  set('discipline',`${c.discipline} · ${c.group} · ${c.person}`);set('project-title',c.title);set('arrival',c.arrival);
  set('files',c.files);set('sample',c.sample);$('sample').hidden=state.phase==='choice';
@@ -38,12 +39,12 @@ function render(){
  };
  set('human',c.external);set('vocabulary',`${terms[state.id]}${state.reference?' The link between copies and method is called provenance. The proposed file list is an inventory, not an inspected list. An integrity check tests whether actual files changed; none was run here.':''}`);
  const researcher=role==='researcher',reviewer=nextRole(state);
- set('next-person',state.phase==='review'?`Next: ${roles[reviewer]}. Their response is a training determination, not inspection or permission.`:state.phase==='returned'?'The researcher must change the private plan; a new pointer will be generated.':state.phase==='repair'?'The researcher must change the package plan; a new pointer will be generated.':`Unresolved outside this exercise: ${c.external}`);
+ set('next-person',state.phase==='review'?`Next: ${roles[reviewer]}. Their response is a training determination, not inspection or permission.`:state.phase==='returned'?'Next: researcher must change the private plan; a new pointer will be generated.':state.phase==='repair'?'Next: researcher must change the package plan; a new pointer will be generated.':state.phase==='curator'?'Next: repository curator records a package observation. No actual acceptance occurs here.':!actionOwner(state)?`No next action in this exercise. ${state.phase==='hold'?`The ${state.id==='variant-study'?'consent and approved-purpose':'independent location-risk'} hold needs external authority; no choice here can clear it.`:'The training responses are recorded; actual review or transfer requires authorized people outside this exercise.'} ${c.external}`:`Next: ${roles[actionOwner(state)]} acts in this simulation.`);
  if(state.phase==='choice'){
   set('step','1 · Choose an action');set('role-context',researcher?'You are the researcher. What would you do with today’s change?':`Switch to researcher to make the first choice.`);
-  if(researcher){const box=document.createElement('div');box.className='choices';a.append(box);for(const option of c.choices){const b=button(box,`${option.label}\nGain: ${option.gain}\nCost: ${option.cost}\nStill unknown: ${option.unknown}`,()=>action({type:'choose',choice:option.id}));b.dataset.choice=option.id;}}
+  if(researcher){const box=document.createElement('div');box.className='choices';a.append(box);for(const option of c.choices){const b=button(box,`${option.label}\nExample: ${option.example}\nGain: ${option.gain}\nCost: ${option.cost}\nStill unknown: ${option.unknown}`,()=>action({type:'choose',choice:option.id}));b.dataset.choice=option.id;}}
  }else if(state.phase==='feedback'){
-  set('step','2 · See the consequence');set('role-context','The workbench draft now reflects your action. Compare it with the question still open. No real files or permissions changed.');
+  set('step','2 · See the consequence');set('role-context',`The workbench draft now reflects your action. ${c.choices.find(x=>x.id===state.choice).example} ${state.progress?'':c.choices.find(x=>x.id===state.choice).blockedReason} No real files or permissions changed.`);
   if(researcher){button(a,'Try another action',()=>action({type:'retry'}));if(state.progress)button(a,'Continue to the change record',()=>action({type:'continue'}),'primary');}
  }else if(state.phase==='record'){
   set('step','3 · Connect the copies');set('role-context','The workbench has invented labels for the earlier and proposed copy. It will generate an evidence pointer for the proposed method; no file or method is inspected.');
@@ -77,8 +78,9 @@ function render(){
   if(researcher){const plan=select(a,'package-plan','Changed package plan',c.packagePlans.filter(p=>p.id!==state.packagePlan),'Choose a changed package plan');gated(a,'Send revised package',[plan],()=>action({type:'repair',plan:plan.value}));}
  }else{
   set('step','5 · What remains');set('role-context',`Training responses recorded. No actual inspection, consent decision, rights review or transfer happened. ${c.external}`);
-  set('result',state.phase==='hold'?`Hard hold. ${c.hold} ${c.external}`:`This draft still needs external checks. ${c.external}`);
+  set('result',state.phase==='hold'?`Hard hold. No next action in this exercise. ${c.hold} ${c.external}`:`No next action in this exercise. This draft still needs external checks. ${c.external}`);
  }
+ $('role-context').prepend(`Current role: ${roles[role]}. ${manualSwitch?'Manual role switching is a simulation, not authentication. ':''}`);
  const history=$('history');history.replaceChildren();for(const event of state.events){const li=document.createElement('li');li.textContent=event;history.append(li);}
 }
 render();
